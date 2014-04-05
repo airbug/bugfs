@@ -5,6 +5,7 @@
 //@Export('bugfs.Path')
 
 //@Require('Class')
+//@Require('Exception')
 //@Require('Obj')
 //@Require('Semaphore')
 //@Require('TypeUtil')
@@ -16,45 +17,54 @@
 // Common Modules
 //-------------------------------------------------------------------------------
 
-var bugpack = require('bugpack').context();
-var fs = require('fs');
-var path = require('path');
+var bugpack                 = require('bugpack').context();
+var fs                      = require('fs');
+var path                    = require('path');
 
 
 //-------------------------------------------------------------------------------
 // BugPack
 //-------------------------------------------------------------------------------
 
-var Class =     bugpack.require('Class');
-var Obj =       bugpack.require('Obj');
-var Semaphore = bugpack.require('Semaphore');
-var TypeUtil =  bugpack.require('TypeUtil');
-var BugFlow =   bugpack.require('bugflow.BugFlow');
-var BugTrace =  bugpack.require('bugtrace.BugTrace');
+var Class                   = bugpack.require('Class');
+var Exception               = bugpack.require('Exception');
+var Obj                     = bugpack.require('Obj');
+var Semaphore               = bugpack.require('Semaphore');
+var TypeUtil                = bugpack.require('TypeUtil');
+var BugFlow                 = bugpack.require('bugflow.BugFlow');
+var BugTrace                = bugpack.require('bugtrace.BugTrace');
 
 
 //-------------------------------------------------------------------------------
 // Simplify References
 //-------------------------------------------------------------------------------
 
-var $forEachParallel = BugFlow.$forEachParallel;
-var $if = BugFlow.$if;
-var $series = BugFlow.$series;
-var $task = BugFlow.$task;
-var $trace = BugTrace.$trace;
-var $traceWithError = BugTrace.$traceWithError;
+var $forEachParallel        = BugFlow.$forEachParallel;
+var $if                     = BugFlow.$if;
+var $series                 = BugFlow.$series;
+var $task                   = BugFlow.$task;
+var $trace                  = BugTrace.$trace;
+var $traceWithError         = BugTrace.$traceWithError;
 
 
 //-------------------------------------------------------------------------------
 // Declare Class
 //-------------------------------------------------------------------------------
 
+/**
+ * @class
+ * @extends {Obj}
+ */
 var Path = Class.extend(Obj, {
 
     //-------------------------------------------------------------------------------
     // Constructor
     //-------------------------------------------------------------------------------
 
+    /**
+     * @constructs
+     * @param {(Path | string)}  givenPath
+     */
     _constructor: function(givenPath) {
 
         this._super();
@@ -166,10 +176,10 @@ var Path = Class.extend(Obj, {
      * 1) If this Path is a directory, it will perform a copyDirectory call
      * 2) If this Path is a file, it will perform a copyFile call
      * @param {(string|Path)} intoPath
-     * @param {?(boolean|function(Error))=} recursive (defaults to true)
-     * @param {?(Path.SyncMode|function(Error))=} syncMode (defaults to Path.SyncMode.STOP)
-     * @param {?(boolean|function(Error, Path))=} resolveSymlink (defaults to false)
-     * @param {?function(Error, Path)} callback
+     * @param {(boolean|function(Throwable, Path=))=} recursive (defaults to true)
+     * @param {(Path.SyncMode|function(Throwable, Path=))=} syncMode (defaults to Path.SyncMode.STOP)
+     * @param {(boolean|function(Throwable, Path=))=} resolveSymlink (defaults to false)
+     * @param {function(Throwable, Path=)=} callback
      */
     copy: function(intoPath, recursive, syncMode, resolveSymlink, callback) {
         if (TypeUtil.isFunction(resolveSymlink)) {
@@ -195,7 +205,7 @@ var Path = Class.extend(Obj, {
                     _this._exists(resolveSymlink, function(throwable, exists) {
                         if (!throwable) {
                             if (!exists) {
-                                flow.error(new Error("Cannot copy path '" + _this.getAbsolutePath() + "' because it does " +
+                                flow.error(new Exception("PathDoesNotExist", {}, "Cannot copy path '" + _this.getAbsolutePath() + "' because it does " +
                                     "not exist."));
                             } else {
                                 flow.complete();
@@ -258,7 +268,7 @@ var Path = Class.extend(Obj, {
                     _this._exists(resolveSymlink, function(throwable, exists) {
                         if (!throwable) {
                             if (!exists) {
-                                flow.error(new Error("Cannot copy path contents '" + _this.getAbsolutePath() + "' because it does " +
+                                flow.error(new Exception("PathDoesNotExist", {}, "Cannot copy path contents '" + _this.getAbsolutePath() + "' because it does " +
                                     "not exist."));
                             } else {
                                 flow.complete();
@@ -305,7 +315,7 @@ var Path = Class.extend(Obj, {
         resolveSymlink = TypeUtil.isBoolean(resolveSymlink) ? resolveSymlink : false;
 
         if (!this._existsSync(resolveSymlink)) {
-            throw new Error("Cannot copy path '" + this.getAbsolutePath() + "' because it does not exist.")
+            throw new Exception("PathDoesNotExist", {}, "Cannot copy path '" + this.getAbsolutePath() + "' because it does not exist.");
         }
 
         var copyPath = this._generateTargetPathSync(intoPath, resolveSymlink);
@@ -342,10 +352,10 @@ var Path = Class.extend(Obj, {
      * The copy will be stopped and no action will be taken.
      *
      * @param {(string|Path)} intoPath
-     * @param {?(boolean|function(Error))=} recursive (defaults to true)
-     * @param {?(Path.SyncMode|function(Error))=} syncMode (defaults to Path.SyncMode.STOP)
-     * @param {?(boolean|function(Error))=} resolveSymlink (defaults to false)
-     * @param {?function(Error, Path)} callback
+     * @param {(boolean|function(Throwable, Path=))=} recursive (defaults to true)
+     * @param {(Path.SyncMode|function(Throwable, Path=))=} syncMode (defaults to Path.SyncMode.STOP)
+     * @param {(boolean|function(Throwable, Path=))=} resolveSymlink (defaults to false)
+     * @param {function(Throwable, Path=)=} callback
      */
     copyDirectory: function(intoPath, recursive, syncMode, resolveSymlink, callback) {
         if (TypeUtil.isFunction(resolveSymlink)) {
@@ -371,7 +381,7 @@ var Path = Class.extend(Obj, {
                     _this._exists(resolveSymlink, function(throwable, exists) {
                         if (!throwable) {
                             if (!exists) {
-                                flow.error(new Error("Cannot copy directory '" + _this.getAbsolutePath() + "' because it does not exist."));
+                                flow.error(new Exception("PathDoesNotExist", {}, "Cannot copy directory '" + _this.getAbsolutePath() + "' because it does not exist."));
                             } else {
                                 flow.complete();
                             }
@@ -386,7 +396,7 @@ var Path = Class.extend(Obj, {
                             if (isDirectory) {
                                 flow.complete();
                             } else {
-                                flow.error(new Error("Cannot perform a directory copy on '" + _this.getAbsolutePath() + "' because it is " +
+                                flow.error(new Exception("PathIsNotADirectory", {}, "Cannot perform a directory copy on '" + _this.getAbsolutePath() + "' because it is " +
                                     "not a directory."));
                             }
                         } else {
@@ -433,10 +443,10 @@ var Path = Class.extend(Obj, {
         resolveSymlink = TypeUtil.isBoolean(resolveSymlink) ? resolveSymlink : false;
 
         if (!this._existsSync(resolveSymlink)) {
-            throw new Error("Cannot copy directory '" + this.getAbsolutePath() + "' because it does not exist.");
+            throw new Exception("PathDoesNotExist", {}, "Cannot copy directory '" + this.getAbsolutePath() + "' because it does not exist.");
         }
         if (!this._isDirectorySync(resolveSymlink)) {
-            throw new Error("Cannot perform a directory copy on '" + this.getAbsolutePath() + "' because it is not a" +
+            throw new Exception("PathIsNotADirectory", {}, "Cannot perform a directory copy on '" + this.getAbsolutePath() + "' because it is not a" +
                 " directory");
         }
 
@@ -481,7 +491,7 @@ var Path = Class.extend(Obj, {
                     _this._exists(resolveSymlink, function(throwable, exists) {
                         if (!throwable) {
                             if (!exists) {
-                                flow.error(new Error("Cannot copy contents of directory '" + _this.getAbsolutePath() + "' " +
+                                flow.error(new Exception("PathDoesNotExist", {}, "Cannot copy contents of directory '" + _this.getAbsolutePath() + "' " +
                                     "because it does not exist."));
                             } else {
                                 flow.complete();
@@ -497,7 +507,7 @@ var Path = Class.extend(Obj, {
                             if (isDirectory) {
                                 flow.complete();
                             } else {
-                                flow.error(new Error("Cannot perform a directory contents copy on '" +
+                                flow.error(new Exception("PathIsNotADirectory", {}, "Cannot perform a directory contents copy on '" +
                                     _this.getAbsolutePath() + "' because it is not a directory."));
                             }
                         } else {
@@ -535,11 +545,11 @@ var Path = Class.extend(Obj, {
         resolveSymlink = TypeUtil.isBoolean(resolveSymlink) ? resolveSymlink : false;
 
         if (!this._existsSync(resolveSymlink)) {
-            throw new Error("Cannot copy contents of directory '" + this.getAbsolutePath() + "' because it does " +
+            throw new Exception("PathDoesNotExist", {}, "Cannot copy contents of directory '" + this.getAbsolutePath() + "' because it does " +
                 "not exist.");
         }
         if (!this._isDirectorySync(resolveSymlink)) {
-            throw new Error("Cannot perform a directory contents copy on '" + this.getAbsolutePath() +
+            throw new Exception("PathIsNotADirectory", {}, "Cannot perform a directory contents copy on '" + this.getAbsolutePath() +
                 "' because it is not a directory.");
         }
         this.ensurePathSync(intoPath);
@@ -573,9 +583,9 @@ var Path = Class.extend(Obj, {
      * The copy will be stopped and no action will be taken.
      *
      * @param {(string|Path)} intoPath
-     * @param {?(Path.SyncMode|function(Error))=} syncMode (defaults to Path.SyncMode.STOP)
-     * @param {?(boolean|function(Error, Path))=} resolveSymlink (defaults to false)
-     * @param {?function(Error, Path)} callback
+     * @param {(Path.SyncMode|function(Throwable, Path=))=} syncMode (defaults to Path.SyncMode.STOP)
+     * @param {(boolean|function(Throwable, Path=))=} resolveSymlink (defaults to false)
+     * @param {function(Throwable, Path=)=} callback
      */
     copyFile: function(intoPath, syncMode, resolveSymlink, callback) {
         if (TypeUtil.isFunction(resolveSymlink)) {
@@ -597,7 +607,7 @@ var Path = Class.extend(Obj, {
                     _this._exists(resolveSymlink, function(throwable, exists) {
                         if (!throwable) {
                             if (!exists) {
-                                flow.error(new Error("Cannot copy file '" + _this.getAbsolutePath() + "' because it does " +
+                                flow.error(new Exception("PathDoesNotExist", {}, "Cannot copy file '" + _this.getAbsolutePath() + "' because it does " +
                                     "not exist."));
                             } else {
                                 flow.complete();
@@ -613,7 +623,7 @@ var Path = Class.extend(Obj, {
                             if (isFile) {
                                 flow.complete();
                             } else {
-                                flow.error(new Error("Cannot perform a file copy on '" + _this.getAbsolutePath() +
+                                flow.error(new Exception("PathIsNotAFile", {}, "Cannot perform a file copy on '" + _this.getAbsolutePath() +
                                     "' because it is not a file."));
                             }
                         } else {
@@ -662,10 +672,10 @@ var Path = Class.extend(Obj, {
         resolveSymlink = TypeUtil.isBoolean(resolveSymlink) ? resolveSymlink : false;
 
         if (!this._existsSync(resolveSymlink)) {
-            throw new Error("Cannot copy file '" + this.getAbsolutePath() + "' because it does not exist.");
+            throw new Exception("PathDoesNotExist", {}, "Cannot copy file '" + this.getAbsolutePath() + "' because it does not exist.");
         }
         if (!this._isFileSync(resolveSymlink)) {
-            throw new Error("Cannot perform a file copy on '" + this.getAbsolutePath() + "' because it is not " +
+            throw new Exception("PathIsNotAFile", {}, "Cannot perform a file copy on '" + this.getAbsolutePath() + "' because it is not " +
                 "a file.");
         }
 
@@ -677,8 +687,8 @@ var Path = Class.extend(Obj, {
 
     /**
      * @param {(string|Path)} intoPath
-     * @param {?(Path.SyncMode|function(Error))=} syncMode (defaults to Path.SyncMode.STOP)
-     * @param {?function(Error, Path)} callback
+     * @param {(Path.SyncMode|function(Throwable, Path=))=} syncMode (defaults to Path.SyncMode.STOP)
+     * @param {function(Throwable, Path=)=} callback
      */
     copySymlink: function(intoPath, syncMode, callback) {
         if (TypeUtil.isFunction(resolveSymlink)) {
@@ -699,7 +709,7 @@ var Path = Class.extend(Obj, {
                     _this._exists(false, function(throwable, exists) {
                         if (!throwable) {
                             if (!exists) {
-                                flow.error(new Error("Cannot copy symlink '" + _this.getAbsolutePath() + "' because it does " +
+                                flow.error(new Exception("PathDoesNotExist", {}, "Cannot copy symlink '" + _this.getAbsolutePath() + "' because it does " +
                                     "not exist."));
                             } else {
                                 flow.complete();
@@ -715,7 +725,7 @@ var Path = Class.extend(Obj, {
                             if (isSymlink) {
                                 flow.complete();
                             } else {
-                                flow.error(new Error("Cannot perform a symlink copy on '" + _this.getAbsolutePath() +
+                                flow.error(new Exception("PathIsNotASymlink", {}, "Cannot perform a symlink copy on '" + _this.getAbsolutePath() +
                                     "' because it is not a symlink."));
                             }
                         } else {
@@ -762,10 +772,10 @@ var Path = Class.extend(Obj, {
         syncMode = TypeUtil.isString(syncMode) ? syncMode : Path.SyncMode.STOP;
 
         if (!this._existsSync(false)) {
-            throw new Error("Cannot copy symlink '" + this.getAbsolutePath() + "' because it does not exist.");
+            throw new Exception("PathDoesNotExist", {}, "Cannot copy symlink '" + this.getAbsolutePath() + "' because it does not exist.");
         }
         if (!this._isSymlinkSync()) {
-            throw new Error("Cannot perform a symlink copy on '" + this.getAbsolutePath() + "' because it is not " +
+            throw new Exception("PathIsNotASymlink", {}, "Cannot perform a symlink copy on '" + this.getAbsolutePath() + "' because it is not " +
                 "a symlink.");
         }
 
@@ -778,9 +788,9 @@ var Path = Class.extend(Obj, {
     /**
      * Rules for createDirectory
      * 1) If the directory already exists, it is NOT MODIFIED
-     * @param {?(boolean|function(Error))=} createParentDirectories (defaults to true)
-     * @param {?(string|function(Error))=} mode (defaults to '0777')
-     * @param {?function(Error, Path)} callback
+     * @param {(boolean|function(Throwable, Path=))=} createParentDirectories (defaults to true)
+     * @param {(string|function(Throwable, Path=))=} mode (defaults to '0777')
+     * @param {function(Throwable, Path=)} callback
      */
     createDirectory: function(createParentDirectories, mode, callback) {
         if (TypeUtil.isFunction(mode)) {
@@ -817,7 +827,7 @@ var Path = Class.extend(Obj, {
                     _this._isDirectory(false, function(error, isDirectory) {
                         if (!error) {
                             if (!isDirectory) {
-                                flow.error(new Error("Could not create directory '" + _this.getAbsolutePath() +
+                                flow.error(new Exception("PathIsNotADirectory", {}, "Could not create directory '" + _this.getAbsolutePath() +
                                     "' because it already exists and is not a directory."));
                             } else {
                                 flow.complete();
@@ -852,7 +862,7 @@ var Path = Class.extend(Obj, {
         if (!this._existsSync(false)) {
             this._createDirectorySync(createParentDirectories, mode);
         } else if (!this._isDirectorySync(false)) {
-            throw new Error("Could not create directory '" + this.getAbsolutePath() + "' because it already exists " +
+            throw new Exception("PathAlreadyExists", {}, "Could not create directory '" + this.getAbsolutePath() + "' because it already exists " +
                 "and is not a directory.");
         }
         return this;
@@ -862,8 +872,8 @@ var Path = Class.extend(Obj, {
      * Rules for createFile
      * 1) If the file already exists, it is NOT MODIFIED.
      * 2) If the path already exists and it is not a file, the function will throw an error.
-     * @param {?(boolean|function(Error))=} createParentDirectories (defaults to true)
-     * @param {?function(Error, Path)} callback
+     * @param {(boolean|function(Throwable, Path=))=} createParentDirectories (defaults to true)
+     * @param {function(Throwable, Path=)=} callback
      */
     createFile: function(createParentDirectories, callback) {
         if (TypeUtil.isFunction(createParentDirectories)) {
@@ -894,7 +904,7 @@ var Path = Class.extend(Obj, {
                     _this._isFile(false, function(error, isFile) {
                         if (!error) {
                             if (!isFile) {
-                                flow.error(new Error("Could not create file '" + _this.getAbsolutePath() +
+                                flow.error(new Exception("PathAlreadyExists", {}, "Could not create file '" + _this.getAbsolutePath() +
                                     "' because it already exists and is not a file."));
                             } else {
                                 flow.complete();
@@ -925,7 +935,7 @@ var Path = Class.extend(Obj, {
         if (!this._existsSync(false)) {
             this._createFileSync(createParentDirectories);
         } else if (!this._isFileSync(false)) {
-            throw new Error("Could not create file '" + this.getAbsolutePath() + "' because it already exists " +
+            throw new Exception("PathAlreadyExists", {}, "Could not create file '" + this.getAbsolutePath() + "' because it already exists " +
                 "and is not a file.");
         }
         return this;
@@ -949,9 +959,9 @@ var Path = Class.extend(Obj, {
     },
 
     /**
-     * @param {?(boolean|function(Error))=} recursive
-     * @param {?(boolean|function(Error))=} resolveSymlink (defaults to false)
-     * @param {?function(Error)} callback
+     * @param {(boolean|function(Throwable=))=} recursive
+     * @param {(boolean|function(Throwable=))=} resolveSymlink (defaults to false)
+     * @param {function(Throwable=)=} callback
      */
     delete: function(recursive, resolveSymlink, callback) {
         if (TypeUtil.isFunction(resolveSymlink)) {
@@ -999,9 +1009,9 @@ var Path = Class.extend(Obj, {
     },
 
     /**
-     * @param {?(boolean|function(Error))=} recursive (defaults to true)
-     * @param {?(boolean|function(Error))=} resolveSymlink (defaults to false)
-     * @param {?function(Error)} callback
+     * @param {(boolean|function(Throwable=))=} recursive (defaults to true)
+     * @param {(boolean|function(Throwable=))=} resolveSymlink (defaults to false)
+     * @param {function(Throwable=)=} callback
      */
     deleteDirectory: function(recursive, resolveSymlink, callback) {
         if (TypeUtil.isFunction(resolveSymlink)) {
@@ -1032,7 +1042,7 @@ var Path = Class.extend(Obj, {
                                 if (isDirectory) {
                                     flow.complete();
                                 } else {
-                                    flow.error(new Error("Cannot perform a directory delete on '" + _this.getAbsolutePath() +
+                                    flow.error(new Exception("PathIsNotADirectory", {}, "Cannot perform a directory delete on '" + _this.getAbsolutePath() +
                                         "' because it is not a directory."));
                                 }
                             } else {
@@ -1054,15 +1064,15 @@ var Path = Class.extend(Obj, {
     },
 
     /**
-     * @param {?boolean=} recursive
-     * @param {?boolean=} resolveSymlink (defaults to false)
+     * @param {boolean=} recursive
+     * @param {boolean=} resolveSymlink (defaults to false)
      */
     deleteDirectorySync: function(recursive, resolveSymlink) {
         recursive = TypeUtil.isBoolean(recursive) ? recursive : true;
         resolveSymlink = TypeUtil.isBoolean(resolveSymlink) ? resolveSymlink : false;
         if (this._existsSync(resolveSymlink)) {
             if (!this._isDirectorySync(resolveSymlink)) {
-                throw new Error("Cannot perform a directory delete on '" + this.getAbsolutePath() +
+                throw new Exception("PathIsNotADirectory", {}, "Cannot perform a directory delete on '" + this.getAbsolutePath() +
                     "' because it is not a directory.")
             }
             this._deleteDirectorySync(recursive);
@@ -1070,8 +1080,8 @@ var Path = Class.extend(Obj, {
     },
 
     /**
-     * @param {?(boolean|function(Error))=} resolveSymlink (defaults to false)
-     * @param {?function(Error)} callback
+     * @param {(boolean|function(Throwable=))=} resolveSymlink (defaults to false)
+     * @param {function(Throwable=)=} callback
      */
     deleteFile: function(resolveSymlink, callback) {
         if (TypeUtil.isFunction(resolveSymlink)) {
@@ -1096,8 +1106,8 @@ var Path = Class.extend(Obj, {
                                 if (isFile) {
                                     flow.complete();
                                 } else {
-                                    flow.error("Cannot perform a file delete on '" + _this.getAbsolutePath() + "' because it " +
-                                        "is not a file.");
+                                    flow.error(new Exception("PathIsNotAFile", {}, "Cannot perform a file delete on '" + _this.getAbsolutePath() + "' because it " +
+                                        "is not a file."));
                                 }
                             } else {
                                 flow.error(error);
@@ -1118,13 +1128,13 @@ var Path = Class.extend(Obj, {
     },
 
     /**
-     * @param {?boolean=} resolveSymlink (defaults to false)
+     * @param {boolean=} resolveSymlink (defaults to false)
      */
     deleteFileSync: function(resolveSymlink) {
         resolveSymlink = TypeUtil.isBoolean(resolveSymlink) ? resolveSymlink : false;
         if (this._existsSync(resolveSymlink)) {
             if (!this._isFileSync(resolveSymlink)) {
-                throw new Error("Cannot perform a file delete on '" + this.getAbsolutePath() + "' because it is not " +
+                throw new Exception("PathIsNotAFile", {}, "Cannot perform a file delete on '" + this.getAbsolutePath() + "' because it is not " +
                     "a file.");
             }
             this._deleteFileSync();
@@ -1132,7 +1142,7 @@ var Path = Class.extend(Obj, {
     },
 
     /**
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     deleteSymlink: function(callback) {
         var _this = this;
@@ -1153,8 +1163,8 @@ var Path = Class.extend(Obj, {
                                 if (isSymlink) {
                                     flow.complete();
                                 } else {
-                                    flow.error("Cannot perform a symlink delete on '" + _this.getAbsolutePath() + "' because it " +
-                                        "is not a symlink.");
+                                    flow.error(new Exception("PathIsNotASymlink", {}, "Cannot perform a symlink delete on '" + _this.getAbsolutePath() + "' because it " +
+                                        "is not a symlink."));
                                 }
                             } else {
                                 flow.error(error);
@@ -1180,7 +1190,7 @@ var Path = Class.extend(Obj, {
     deleteSymlinkSync: function() {
         if (this._existsSync(false)) {
             if (!this._isSymlinkSync()) {
-                throw new Error("Cannot perform a symlink delete on '" + this.getAbsolutePath() + "' because it is not " +
+                throw new Exception("PathIsNotASymlink", {}, "Cannot perform a symlink delete on '" + this.getAbsolutePath() + "' because it is not " +
                     "a symlink.");
             }
             this._deleteSymlinkSync();
@@ -1216,8 +1226,8 @@ var Path = Class.extend(Obj, {
 
     //TODO BRN: Should this return false if the path does not exist, or should it throw an error like it does now?
     /**
-     * @param {(boolean|function(Error, boolean))} resolveSymlink (defaults to false)
-     * @param {?function(Error, boolean)=} callback
+     * @param {(boolean|function(Throwable, boolean=))} resolveSymlink (defaults to false)
+     * @param {function(Throwable, boolean=)=} callback
      */
     isDirectory: function(resolveSymlink, callback) {
         if (TypeUtil.isFunction(resolveSymlink)) {
@@ -1244,8 +1254,8 @@ var Path = Class.extend(Obj, {
     },
 
     /**
-     * @param {(boolean|function(Error, boolean))} resolveSymlink (defaults to false)
-     * @param {?function(Error, boolean)=} callback
+     * @param {(boolean|function(Throwable, boolean=))=} resolveSymlink (defaults to false)
+     * @param {function(Throwable, boolean=)=} callback
      */
     isDirectoryEmpty: function(resolveSymlink, callback) {
         if (TypeUtil.isFunction(resolveSymlink)) {
@@ -1260,7 +1270,7 @@ var Path = Class.extend(Obj, {
                     _this._exists(resolveSymlink, function(throwable, exists) {
                         if (!throwable) {
                             if (!exists) {
-                                flow.error(new Error("Cannot check if directory '" + _this.getAbsolutePath() + "' is empty because it " +
+                                flow.error(new Exception("PathDoesNotExist", {}, "Cannot check if directory '" + _this.getAbsolutePath() + "' is empty because it " +
                                     "does not exist."));
                             } else {
                                 flow.complete();
@@ -1276,7 +1286,7 @@ var Path = Class.extend(Obj, {
                             if (isDirectory) {
                                 flow.complete();
                             } else {
-                                flow.error(new Error("Cannot perform an empty directory check on '" + _this.getAbsolutePath() +
+                                flow.error(new Exception("PathIsNotADirectory", {}, "Cannot perform an empty directory check on '" + _this.getAbsolutePath() +
                                     "' because it is not a directory."));
                             }
                         } else {
@@ -1302,25 +1312,25 @@ var Path = Class.extend(Obj, {
     },
 
     /**
-     * @param {?boolean=} resolveSymlink (defaults to false)
+     * @param {boolean=} resolveSymlink (defaults to false)
      * @return {boolean}
      */
     isDirectoryEmptySync: function(resolveSymlink) {
         resolveSymlink = TypeUtil.isBoolean(resolveSymlink) ? resolveSymlink : false;
         if (!this._existsSync(resolveSymlink)) {
-            throw new Error("Cannot check if directory '" + this.getAbsolutePath() + "' is empty because it does " +
+            throw new Exception("PathDoesNotExist", {}, "Cannot check if directory '" + this.getAbsolutePath() + "' is empty because it does " +
                 "not exist.");
         }
         if (!this._isDirectorySync(resolveSymlink)) {
-            throw new Error("Cannot perform an empty directory check on '" + this.getAbsolutePath() +
+            throw new Exception("PathIsNotADirectory", {}, "Cannot perform an empty directory check on '" + this.getAbsolutePath() +
                 "' because it is not a directory.");
         }
         return this._isDirectoryEmptySync(resolveSymlink);
     },
 
     /**
-     * @param {(boolean|function(Error, boolean))} resolveSymlink (defaults to false)
-     * @param {?function(Error, boolean)=} callback
+     * @param {(boolean|function(Throwable, boolean=))} resolveSymlink (defaults to false)
+     * @param {function(Throwable, boolean=)=} callback
      */
     isFile: function(resolveSymlink, callback) {
         if (TypeUtil.isFunction(resolveSymlink)) {
@@ -1346,7 +1356,7 @@ var Path = Class.extend(Obj, {
     },
 
     /**
-     * @param {function(Error, boolean)} callback
+     * @param {function(Throwable, boolean=)} callback
      */
     isSymlink: function(callback) {
         var _this = this;
@@ -1386,9 +1396,9 @@ var Path = Class.extend(Obj, {
     //TODO BRN: Handle the case where a move is across a network or through a symlink, need to copy instead of rename
     /**
      * @param {(string|Path)} intoPath
-     * @param {?(Path.SyncMode|function(Error))=} syncMode (defaults to Path.SyncMode.STOP)
-     * @param {?(boolean|function(Error))=} resolveSymlink (defaults to false)
-     * @param {?function(Error)} callback
+     * @param {(Path.SyncMode|function(Throwable, Path=))=} syncMode (defaults to Path.SyncMode.STOP)
+     * @param {(boolean|function(Throwable, Path=))=} resolveSymlink (defaults to false)
+     * @param {function(Throwable, Path=)=} callback
      */
     move: function(intoPath, syncMode, resolveSymlink, callback) {
         if (TypeUtil.isFunction(resolveSymlink)) {
@@ -1409,7 +1419,7 @@ var Path = Class.extend(Obj, {
                     _this._exists(resolveSymlink, function(throwable, exists) {
                         if (!throwable) {
                             if (!exists) {
-                                flow.error(new Error("Cannot move path '" + _this.getAbsolutePath() + "' because it does " +
+                                flow.error(new Exception("PathDoesNotExist", {}, "Cannot move path '" + _this.getAbsolutePath() + "' because it does " +
                                     "not exist."));
                             } else {
                                 flow.complete();
@@ -1450,8 +1460,8 @@ var Path = Class.extend(Obj, {
 
     /**
      * @param {(string|Path)} intoPath
-     * @param {?Path.SyncMode=} syncMode
-     * @param {?boolean=} resolveSymlink (defaults to false)
+     * @param {Path.SyncMode=} syncMode
+     * @param {boolean=} resolveSymlink (defaults to false)
      * @return {Path}
      */
     moveSync: function(intoPath, syncMode, resolveSymlink) {
@@ -1460,7 +1470,7 @@ var Path = Class.extend(Obj, {
         resolveSymlink = TypeUtil.isBoolean(resolveSymlink) ? resolveSymlink : false;
 
         if (!this._existsSync(resolveSymlink)) {
-            throw new Error("Cannot move path '" + this.getAbsolutePath() + "' because it does not exist.")
+            throw new Exception("PathDoesNotExist", {}, "Cannot move path '" + this.getAbsolutePath() + "' because it does not exist.")
         }
 
         var movePath = this._generateTargetPathSync(intoPath, resolveSymlink);
@@ -1481,9 +1491,9 @@ var Path = Class.extend(Obj, {
      * directory's contents will then be moved in to the newly created directory.
      * 6) This will not copy files recursively unless the "recursive" option is set to true.
      * @param {(string|Path)} intoPath
-     * @param {?(Path.SyncMode|function(Error))=} syncMode (defaults to Path.SyncMode.STOP)
-     * @param {?(boolean|function(Error, Path))=} resolveSymlink (defaults to false)
-     * @param {?function(Error, Path)} callback
+     * @param {(Path.SyncMode|function(Throwable, Path=))=} syncMode (defaults to Path.SyncMode.STOP)
+     * @param {(boolean|function(Throwable, Path=))=} resolveSymlink (defaults to false)
+     * @param {function(Throwable, Path=)=} callback
      */
     moveDirectory: function(intoPath, syncMode, resolveSymlink, callback) {
         if (TypeUtil.isFunction(resolveSymlink)) {
@@ -1505,7 +1515,7 @@ var Path = Class.extend(Obj, {
                     _this._exists(resolveSymlink, function(throwable, exists) {
                         if (!throwable) {
                             if (!exists) {
-                                flow.error(new Error("Cannot move directory '" + _this.getAbsolutePath() + "' because it " +
+                                flow.error(new Exception("PathDoesNotExist", {}, "Cannot move directory '" + _this.getAbsolutePath() + "' because it " +
                                     "does not exist."));
                             } else {
                                 flow.complete();
@@ -1521,7 +1531,7 @@ var Path = Class.extend(Obj, {
                             if (isDirectory) {
                                 flow.complete();
                             } else {
-                                flow.error(new Error("Cannot perform a directory move on '" + _this.getAbsolutePath() +
+                                flow.error(new Exception("PathIsNotADirectory", {}, "Cannot perform a directory move on '" + _this.getAbsolutePath() +
                                     "' because it is not a directory."));
                             }
                         } else {
@@ -1560,8 +1570,8 @@ var Path = Class.extend(Obj, {
 
     /**
      * @param {(string|Path)} intoPath
-     * @param {?Path.SyncMode=} syncMode
-     * @param {?boolean=} resolveSymlink (defaults to false)
+     * @param {Path.SyncMode=} syncMode
+     * @param {boolean=} resolveSymlink (defaults to false)
      * @return {Path}
      */
     moveDirectorySync: function(intoPath, syncMode, resolveSymlink) {
@@ -1570,10 +1580,10 @@ var Path = Class.extend(Obj, {
         resolveSymlink = TypeUtil.isBoolean(resolveSymlink) ? resolveSymlink : false;
 
         if (!this._existsSync(resolveSymlink)) {
-            throw new Error("Cannot move directory '" + this.getAbsolutePath() + "' because it does not exist.");
+            throw new Exception("PathDoesNotExist", {}, "Cannot move directory '" + this.getAbsolutePath() + "' because it does not exist.");
         }
         if (!this._isDirectorySync(resolveSymlink)) {
-            throw new Error("Cannot perform a directory move on '" + this.getAbsolutePath() + "' because it is not a" +
+            throw new Exception("PathIsNotADirectory", {}, "Cannot perform a directory move on '" + this.getAbsolutePath() + "' because it is not a" +
                 " directory");
         }
 
@@ -1590,9 +1600,9 @@ var Path = Class.extend(Obj, {
      * 3) If the intoPath does not exist, this function will attempt to create the intoPath and then move the contents.
      * 4) This will always move files recursively
      * @param {(string|Path)} intoPath
-     * @param {?(Path.SyncMode|function(Error))=} syncMode (defaults to Path.SyncMode)
-     * @param {?(boolean|function(Error))=} resolveSymlink (defaults to false)
-     * @param {?function(Error)} callback
+     * @param {(Path.SyncMode|function(Throwable=))=} syncMode (defaults to Path.SyncMode)
+     * @param {(boolean|function(Throwable=))=} resolveSymlink (defaults to false)
+     * @param {function(Throwable=)=} callback
      */
     moveDirectoryContents: function(intoPath, syncMode, resolveSymlink, callback) {
         if (TypeUtil.isFunction(resolveSymlink)) {
@@ -1613,7 +1623,7 @@ var Path = Class.extend(Obj, {
                     _this._exists(resolveSymlink, function(throwable, exists) {
                         if (!throwable) {
                             if (!exists) {
-                                flow.error(new Error("Cannot move contents of directory '" + _this.getAbsolutePath() + "' " +
+                                flow.error(new Exception("PathDoesNotExist", {}, "Cannot move contents of directory '" + _this.getAbsolutePath() + "' " +
                                     "because it does not exist."));
                             } else {
                                 flow.complete();
@@ -1629,7 +1639,7 @@ var Path = Class.extend(Obj, {
                             if (isDirectory) {
                                 flow.complete();
                             } else {
-                                flow.error(new Error("Cannot perform a directory contents move on '" +
+                                flow.error(new Exception("PathIsNotADirectory", {}, "Cannot perform a directory contents move on '" +
                                     _this.getAbsolutePath() + "' because it is not a directory."));
                             }
                         } else {
@@ -1656,20 +1666,20 @@ var Path = Class.extend(Obj, {
 
     /**
      * @param {(string|Path)} intoPath
-     * @param {?Path.SyncMode=} syncMode (defaults to Path.SyncMode.STOP)
-     * @param {?boolean=} resolveSymlink (defaults to false)
+     * @param {Path.SyncMode=} syncMode (defaults to Path.SyncMode.STOP)
+     * @param {boolean=} resolveSymlink (defaults to false)
      */
     moveDirectoryContentsSync: function(intoPath, syncMode, resolveSymlink) {
         intoPath = TypeUtil.isString(intoPath) ? new Path(intoPath) : intoPath;
         syncMode = TypeUtil.isString(syncMode) ? syncMode : Path.SyncMode.STOP;
         resolveSymlink = TypeUtil.isBoolean(resolveSymlink) ? resolveSymlink : false;
         if (!this._existsSync(resolveSymlink)) {
-            throw new Error("Cannot move contents of directory '" + this.getAbsolutePath() + "' because it does " +
+            throw new Exception("PathDoesNotExist", {}, "Cannot move contents of directory '" + this.getAbsolutePath() + "' because it does " +
                 "not exist.");
         }
         if (!this._isDirectorySync(resolveSymlink)) {
-            throw new Error("Cannot perform a directory contents move on '" + this.getAbsolutePath() +
-                "' because it is not a directory.")
+            throw new Exception("PathIsNotADirectory", {}, "Cannot perform a directory contents move on '" + this.getAbsolutePath() +
+                "' because it is not a directory.");
         }
         this.ensurePathSync(intoPath);
         this._moveDirectoryContentsSync(intoPath, syncMode);
@@ -1677,9 +1687,9 @@ var Path = Class.extend(Obj, {
 
     /**
      * @param {(string|Path)} intoPath
-     * @param {?(Path.SyncMode|function(Error))=} syncMode (defaults to false)
-     * @param {?(boolean|function(Error, Path))=} resolveSymlink (defaults to false)
-     * @param {?function(Error, Path)} callback
+     * @param {(Path.SyncMode|function(Throwable, Path=))=} syncMode (defaults to false)
+     * @param {(boolean|function(Throwable, Path=))=} resolveSymlink (defaults to false)
+     * @param {function(Throwable, Path=)=} callback
      */
     moveFile: function(intoPath, syncMode, resolveSymlink, callback) {
         if (TypeUtil.isFunction(resolveSymlink)) {
@@ -1701,7 +1711,7 @@ var Path = Class.extend(Obj, {
                     _this._exists(resolveSymlink, function(throwable, exists) {
                         if (!throwable) {
                             if (!exists) {
-                                flow.error(new Error("Cannot move file '" + _this.getAbsolutePath() + "' because it does " +
+                                flow.error(new Exception("PathDoesNotExist", {}, "Cannot move file '" + _this.getAbsolutePath() + "' because it does " +
                                     "not exist."));
                             } else {
                                 flow.complete();
@@ -1717,7 +1727,7 @@ var Path = Class.extend(Obj, {
                             if (isFile) {
                                 flow.complete();
                             } else {
-                                flow.error(new Error("Cannot perform a file move on '" + _this.getAbsolutePath() + "' because it " +
+                                flow.error(new Exception("PathIsNotAFile", {}, "Cannot perform a file move on '" + _this.getAbsolutePath() + "' because it " +
                                     "is not a file."));
                             }
                         } else {
@@ -1756,8 +1766,8 @@ var Path = Class.extend(Obj, {
 
     /**
      * @param {(string|Path)} intoPath
-     * @param {?Path.SyncMode=} syncMode (defaults to Path.SyncMode.STOP)
-     * @param {?boolean=} resolveSymlink (defaults to false)
+     * @param {Path.SyncMode=} syncMode (defaults to Path.SyncMode.STOP)
+     * @param {boolean=} resolveSymlink (defaults to false)
      * @return {Path}
      */
     moveFileSync: function(intoPath, syncMode, resolveSymlink) {
@@ -1766,11 +1776,11 @@ var Path = Class.extend(Obj, {
         resolveSymlink = TypeUtil.isBoolean(resolveSymlink) ? resolveSymlink : false;
 
         if (!this._existsSync(resolveSymlink)) {
-            throw new Error("Cannot move file '" + this.getAbsolutePath() + "' because it does" +
+            throw new Exception("PathDoesNotExist", {}, "Cannot move file '" + this.getAbsolutePath() + "' because it does" +
                 "not exist.");
         }
         if (!this._isFileSync(resolveSymlink)) {
-             throw new Error("Cannot perform a file move on '" + this.getAbsolutePath() + "' because it " +
+             throw new Exception("PathIsNotAFile", {}, "Cannot perform a file move on '" + this.getAbsolutePath() + "' because it " +
                  "is not a file.");
         }
 
@@ -1782,8 +1792,8 @@ var Path = Class.extend(Obj, {
 
     /**
      * @param {(string|Path)} intoPath
-     * @param {?(Path.SyncMode|function(Error))=} syncMode (defaults to false)
-     * @param {?function(Error, Path)} callback
+     * @param {(Path.SyncMode|function(Throwable, Path=))=} syncMode (defaults to false)
+     * @param {function(Throwable, Path=)=} callback
      */
     moveSymlink: function(intoPath, syncMode, callback) {
         if (TypeUtil.isFunction(syncMode)) {
@@ -1801,7 +1811,7 @@ var Path = Class.extend(Obj, {
                     _this._exists(false, function(throwable, exists) {
                         if (!throwable) {
                             if (!exists) {
-                                flow.error(new Error("Cannot move symlink '" + _this.getAbsolutePath() + "' because it does " +
+                                flow.error(new Exception("PathDoesNotExist", {}, "Cannot move symlink '" + _this.getAbsolutePath() + "' because it does " +
                                     "not exist."));
                             } else {
                                 flow.complete();
@@ -1817,7 +1827,7 @@ var Path = Class.extend(Obj, {
                             if (isSymlink) {
                                 flow.complete();
                             } else {
-                                flow.error(new Error("Cannot perform a symlink move on '" + _this.getAbsolutePath() + "' because it " +
+                                flow.error(new Exception("PathIsNotASymlink", {}, "Cannot perform a symlink move on '" + _this.getAbsolutePath() + "' because it " +
                                     "is not a symlink."));
                             }
                         } else {
@@ -1850,7 +1860,7 @@ var Path = Class.extend(Obj, {
 
     /**
      * @param {(string|Path)} intoPath
-     * @param {?Path.SyncMode=} syncMode (defaults to Path.SyncMode.STOP)
+     * @param {Path.SyncMode=} syncMode (defaults to Path.SyncMode.STOP)
      * @return {Path}
      */
     moveSymlinkSync: function(intoPath, syncMode) {
@@ -1859,10 +1869,10 @@ var Path = Class.extend(Obj, {
 
         var movePath = new Path(intoPath.getAbsolutePath() + path.sep + this.getName());
         if (!this._existsSync(false)) {
-            throw new Error("Cannot move symlink '" + this.getAbsolutePath() + "' because it does not exist.");
+            throw new Exception("PathDoesNotExist", {}, "Cannot move symlink '" + this.getAbsolutePath() + "' because it does not exist.");
         }
         if (!this._isSymlinkSync()) {
-            throw new Error("Cannot perform a symlink move on '" + this.getAbsolutePath() + "' because it " +
+            throw new Exception("PathIsNotASymlink", {}, "Cannot perform a symlink move on '" + this.getAbsolutePath() + "' because it " +
                 "is not a symlink.");
         }
         this.ensurePathSync(intoPath);
@@ -1871,8 +1881,8 @@ var Path = Class.extend(Obj, {
     },
 
     /**
-     * @param {?(boolean|function(Error, Array.<Path>))=} resolveSymlink (defaults to true)
-     * @param {?function(Error, Array.<Path>)} callback
+     * @param {(boolean|function(Throwable, Array.<Path>=))=} resolveSymlink (defaults to true)
+     * @param {function(Throwable, Array.<Path>=)=} callback
      */
     readDirectory: function(resolveSymlink, callback) {
         if (TypeUtil.isFunction(resolveSymlink)) {
@@ -1888,7 +1898,7 @@ var Path = Class.extend(Obj, {
                     _this._exists(resolveSymlink, function(throwable, exists) {
                         if (!throwable) {
                             if (!exists) {
-                                flow.error(new Error("Cannot read directory '" + _this.getAbsolutePath() + "' because it " +
+                                flow.error(new Exception("PathDoesNotExist", {}, "Cannot read directory '" + _this.getAbsolutePath() + "' because it " +
                                     "does not exist."));
                             } else {
                                 flow.complete();
@@ -1904,8 +1914,8 @@ var Path = Class.extend(Obj, {
                             if (isDirectory) {
                                 flow.complete();
                             } else {
-                                flow.error("Cannot read directory '" + _this.getAbsolutePath() + "' because it " +
-                                    "is not a directory.");
+                                flow.error(new Exception("PathIsNotADirectory", {}, "Cannot read directory '" + _this.getAbsolutePath() + "' because it " +
+                                    "is not a directory."));
                             }
                         } else {
                             flow.error(error);
@@ -1932,7 +1942,7 @@ var Path = Class.extend(Obj, {
     },
 
     /**
-     * @param {?boolean=} resolveSymlink (defaults to true)
+     * @param {boolean=} resolveSymlink (defaults to true)
      * @return {Array<Path>}
      */
     readDirectorySync: function(resolveSymlink) {
@@ -1941,18 +1951,18 @@ var Path = Class.extend(Obj, {
             if (this._isDirectorySync(resolveSymlink)) {
                 return this._readDirectorySync();
             } else {
-                throw new Error("Cannot read directory '" + this.getAbsolutePath() + "' because it is not a " +
+                throw new Exception("PathIsNotADirectory", {}, "Cannot read directory '" + this.getAbsolutePath() + "' because it is not a " +
                     "directory.");
             }
         } else {
-            throw new Error("Cannot ready directory '" + this.getAbsolutePath() + "' because it does not exist.");
+            throw new Exception("PathDoesNotExist", {}, "Cannot ready directory '" + this.getAbsolutePath() + "' because it does not exist.");
         }
     },
 
     /**
-     * @param {(string|function(Error, *=))} encoding
-     * @param {(boolean|function(Error, *=))=} resolveSymlink (defaults to true)
-     * @param {function(Error, *=)=} callback
+     * @param {(string|function(Throwable, *=))} encoding
+     * @param {(boolean|function(Throwable, *=))=} resolveSymlink (defaults to true)
+     * @param {function(Throwable, *=)=} callback
      */
     readFile: function(encoding, resolveSymlink, callback) {
         if (TypeUtil.isFunction(resolveSymlink)) {
@@ -1973,7 +1983,7 @@ var Path = Class.extend(Obj, {
                     _this._exists(resolveSymlink, function(throwable, exists) {
                         if (!throwable) {
                             if (!exists) {
-                                flow.error(new Error("Cannot read file '" + _this.getAbsolutePath() + "' because it " +
+                                flow.error(new Exception("PathDoesNotExist", {}, "Cannot read file '" + _this.getAbsolutePath() + "' because it " +
                                     "does not exist."));
                             } else {
                                 flow.complete();
@@ -1989,8 +1999,8 @@ var Path = Class.extend(Obj, {
                             if (isFile) {
                                 flow.complete();
                             } else {
-                                flow.error("Cannot read file '" + _this.getAbsolutePath() + "' because it " +
-                                    "is not a file.");
+                                flow.error(new Exception("PathIsNotAFile", {}, "Cannot read file '" + _this.getAbsolutePath() + "' because it " +
+                                    "is not a file."));
                             }
                         } else {
                             flow.error(error);
@@ -2023,11 +2033,11 @@ var Path = Class.extend(Obj, {
             if (this._isFileSync(resolveSymlink)) {
                 return this._readFileSync(encoding);
             } else {
-                throw new Error("Cannot read file '" + this.getAbsolutePath() + "' because it is not a " +
+                throw new Exception("PathIsNotAFil", {}, "Cannot read file '" + this.getAbsolutePath() + "' because it is not a " +
                     "file.");
             }
         } else {
-            throw new Error("Cannot read file '" + this.getAbsolutePath() + "' because it does not exist.");
+            throw new Exception("PathDoesNotExist", {}, "Cannot read file '" + this.getAbsolutePath() + "' because it does not exist.");
         }
     },
 
@@ -2051,8 +2061,8 @@ var Path = Class.extend(Obj, {
 
     /**
      * @param {(string|Path)} intoPath
-     * @param {?(Path.SyncMode|function(Error))=} syncMode (defaults to Path.SyncMode.STOP)
-     * @param {?function(Error, Path)} callback
+     * @param {(Path.SyncMode|function(Throwable, Path=))=} syncMode (defaults to Path.SyncMode.STOP)
+     * @param {function(Throwable, Path=)=} callback
      */
     symlinkInto: function(intoPath, syncMode, callback) {
         if (TypeUtil.isFunction(syncMode)) {
@@ -2069,7 +2079,7 @@ var Path = Class.extend(Obj, {
                     _this._exists(false, function(throwable, exists) {
                         if (!throwable) {
                             if (!exists) {
-                                flow.error(new Error("Cannot symlink path '" + _this.getAbsolutePath() + "' because it does " +
+                                flow.error(new Exception("PathDoesNotExist", {}, "Cannot symlink path '" + _this.getAbsolutePath() + "' because it does " +
                                     "not exist."));
                             } else {
                                 flow.complete();
@@ -2113,7 +2123,7 @@ var Path = Class.extend(Obj, {
 
         var symlinkPath = new Path(intoPath.getAbsolutePath() + path.sep + this.getName());
         if (!this._existsSync(false)) {
-            throw new Error("Cannot symlink path '" + this.getAbsolutePath() + "' because it does not exist.")
+            throw new Exception("PathDoesNotExist", {}, "Cannot symlink path '" + this.getAbsolutePath() + "' because it does not exist.")
         }
         this.ensurePathSync(intoPath);
         this._symlinkToSync(symlinkPath, syncMode);
@@ -2122,8 +2132,8 @@ var Path = Class.extend(Obj, {
 
     /**
      * @param {(string|Path)} intoPath
-     * @param {?(Path.SyncMode|function(Error))=} syncMode (defaults to Path.SyncMode.STOP)
-     * @param {?function(Error, Path)} callback
+     * @param {(Path.SyncMode|function(Throwable, Path=))=} syncMode (defaults to Path.SyncMode.STOP)
+     * @param {function(Throwable, Path=)=} callback
      */
     symlinkDirectoryInto: function(intoPath, syncMode, callback) {
         if (TypeUtil.isFunction(syncMode)) {
@@ -2141,7 +2151,7 @@ var Path = Class.extend(Obj, {
                     _this._exists(false, function(throwable, exists) {
                         if (!throwable) {
                             if (!exists) {
-                                flow.error(new Error("Cannot symlink directory '" + _this.getAbsolutePath() + "' because it " +
+                                flow.error(new Exception("PathDoesNotExist", {}, "Cannot symlink directory '" + _this.getAbsolutePath() + "' because it " +
                                     "does not exist."));
                             } else {
                                 flow.complete();
@@ -2157,7 +2167,7 @@ var Path = Class.extend(Obj, {
                             if (isDirectory) {
                                 flow.complete();
                             } else {
-                                flow.error(new Error("Cannot perform a directory symlink on '" + _this.getAbsolutePath() +
+                                flow.error(new Exception("PathIsNotADirectory", {}, "Cannot perform a directory symlink on '" + _this.getAbsolutePath() +
                                     "' because it is not a directory."));
                             }
                         } else {
@@ -2199,10 +2209,10 @@ var Path = Class.extend(Obj, {
 
         var symlinkPath = new Path(intoPath.getAbsolutePath() + path.sep + this.getName());
         if (!this._existsSync(false)) {
-            throw new Error("Cannot symlink directory '" + this.getAbsolutePath() + "' because it does not exist.");
+            throw new Exception("PathDoesNotExist", {}, "Cannot symlink directory '" + this.getAbsolutePath() + "' because it does not exist.");
         }
         if (!this._isDirectorySync(false)) {
-            throw new Error("Cannot perform a directory symlink on '" + this.getAbsolutePath() + "' because it is not a" +
+            throw new Exception("PathIsNotADirectory", {}, "Cannot perform a directory symlink on '" + this.getAbsolutePath() + "' because it is not a" +
                 " directory");
         }
         this.ensurePathSync(intoPath);
@@ -2212,8 +2222,8 @@ var Path = Class.extend(Obj, {
 
     /**
      * @param {(string|Path)} intoPath
-     * @param {?(Path.SyncMode|function(Error))=} syncMode (defaults to Path.SyncMode.STOP)
-     * @param {?function(Error, Path)} callback
+     * @param {(Path.SyncMode|function(Throwable, Path=))=} syncMode (defaults to Path.SyncMode.STOP)
+     * @param {function(Throwable, Path=)=} callback
      */
     symlinkDirectoryContentsInto: function(intoPath, syncMode, callback) {
         if (TypeUtil.isFunction(syncMode)) {
@@ -2230,7 +2240,7 @@ var Path = Class.extend(Obj, {
                     _this._exists(false, function(throwable, exists) {
                         if (!throwable) {
                             if (!exists) {
-                                flow.error(new Error("Cannot symlink contents of directory '" + _this.getAbsolutePath() + "' " +
+                                flow.error(new Exception("PathDoesNotExist", {}, "Cannot symlink contents of directory '" + _this.getAbsolutePath() + "' " +
                                     "because the directory does not exist."));
                             } else {
                                 flow.complete();
@@ -2246,7 +2256,7 @@ var Path = Class.extend(Obj, {
                             if (isDirectory) {
                                 flow.complete();
                             } else {
-                                flow.error(new Error("Cannot symlink contents of directory '" +
+                                flow.error(new Exception("PathIsNotADirectory", {}, "Cannot symlink contents of directory '" +
                                     _this.getAbsolutePath() + "' because it is not a directory."));
                             }
                         } else {
@@ -2281,12 +2291,12 @@ var Path = Class.extend(Obj, {
         intoPath = TypeUtil.isString(intoPath) ? new Path(intoPath) : intoPath;
         syncMode = TypeUtil.isString(syncMode) ? syncMode : Path.SyncMode.STOP;
         if (!this._existsSync(false)) {
-            throw new Error("Cannot symlink contents of directory '" + this.getAbsolutePath() + "' because the " +
+            throw new Exception("PathDoesNotExist", {}, "Cannot symlink contents of directory '" + this.getAbsolutePath() + "' because the " +
                 "directory does not exist.");
         }
         if (!this._isDirectorySync(false)) {
-            throw new Error("Cannot symlink contents of directory '" + this.getAbsolutePath() +
-                "' because it is not a directory.")
+            throw new Exception("PathIsNotADirectory", {}, "Cannot symlink contents of directory '" + this.getAbsolutePath() +
+                "' because it is not a directory.");
         }
         this.ensurePathSync(intoPath);
         this._symlinkDirectoryContentsIntoSync(intoPath, syncMode);
@@ -2294,8 +2304,8 @@ var Path = Class.extend(Obj, {
 
     /**
      * @param {(string|Path)} intoPath
-     * @param {?(Path.SyncMode|function(Error))=} syncMode (defaults to Path.SyncMode.STOP)
-     * @param {?function(Error, Path)} callback
+     * @param {(Path.SyncMode|function(Throwable, Path=))=} syncMode (defaults to Path.SyncMode.STOP)
+     * @param {function(Throwable, Path=)=} callback
      */
     symlinkFileInto: function(intoPath, syncMode, callback) {
         if (TypeUtil.isFunction(syncMode)) {
@@ -2312,7 +2322,7 @@ var Path = Class.extend(Obj, {
                     _this._exists(false, function(throwable, exists) {
                         if (!throwable) {
                             if (!exists) {
-                                flow.error(new Error("Cannot symlink file '" + _this.getAbsolutePath() + "' because it " +
+                                flow.error(new Exception("PathDoesNotExist", {}, "Cannot symlink file '" + _this.getAbsolutePath() + "' because it " +
                                     "does not exist."));
                             } else {
                                 flow.complete();
@@ -2328,7 +2338,7 @@ var Path = Class.extend(Obj, {
                             if (isFile) {
                                 flow.complete();
                             } else {
-                                flow.error(new Error("Cannot symlink file '" + _this.getAbsolutePath() + "' because " +
+                                flow.error(new Exception("PathIsNotAFile", {}, "Cannot symlink file '" + _this.getAbsolutePath() + "' because " +
                                     "it is not a file."));
                             }
                         } else {
@@ -2369,11 +2379,11 @@ var Path = Class.extend(Obj, {
         syncMode = TypeUtil.isString(syncMode) ? syncMode : Path.SyncMode.STOP;
         var symlinkPath = new Path(intoPath.getAbsolutePath() + path.sep + this.getName());
         if (!this._existsSync(false)) {
-            throw new Error("Cannot symlink file '" + this.getAbsolutePath() + "' because it does" +
+            throw new Exception("PathDoesNotExist", {}, "Cannot symlink file '" + this.getAbsolutePath() + "' because it does" +
                 "not exist.");
         }
         if (!this._isFileSync(false)) {
-            throw new Error("Cannot symlink file '" + this.getAbsolutePath() + "' because it " +
+            throw new Exception("PathIsNotAFile", {}, "Cannot symlink file '" + this.getAbsolutePath() + "' because it " +
                 "is not a file.");
         }
         this.ensurePathSync(intoPath);
@@ -2383,9 +2393,9 @@ var Path = Class.extend(Obj, {
 
     /**
      * @param {string} data
-     * @param {?(string|function(Error))=} encoding (defaults to 'utf8')
-     * @param {?(boolean|function(Error))=} resolveSymlink (defaults to true)
-     * @param {?function(Error)} callback
+     * @param {(string|function(Throwable=))=} encoding (defaults to 'utf8')
+     * @param {(boolean|function(Throwable=))=} resolveSymlink (defaults to true)
+     * @param {function(Throwable=)=} callback
      */
     writeFile: function(data, encoding, resolveSymlink, callback) {
         if (TypeUtil.isFunction(resolveSymlink)) {
@@ -2405,7 +2415,7 @@ var Path = Class.extend(Obj, {
                     _this._exists(resolveSymlink, function(throwable, exists) {
                         if (!throwable) {
                             if (!exists) {
-                                flow.error(new Error("Cannot write to file '" + _this.getAbsolutePath() + "' because it " +
+                                flow.error(new Exception("PathDoesNotExist", {}, "Cannot write to file '" + _this.getAbsolutePath() + "' because it " +
                                     "does not exist."));
                             } else {
                                 flow.complete();
@@ -2421,7 +2431,7 @@ var Path = Class.extend(Obj, {
                             if (isFile) {
                                 flow.complete();
                             } else {
-                                flow.error(new Error("Cannot write to file '" + _this.getAbsolutePath() + "' because " +
+                                flow.error(new Exception("PathIsNotAFile", {}, "Cannot write to file '" + _this.getAbsolutePath() + "' because " +
                                     "it is not a file."));
                             }
                         } else {
@@ -2456,11 +2466,11 @@ var Path = Class.extend(Obj, {
             if (this._isFileSync(resolveSymlink)) {
                 this._writeFileSync(data, encoding);
             } else {
-                throw new Error("Cannot write to file '" + this.getAbsolutePath() + "' because " +
+                throw new Exception("PathIsNotAFile", {}, "Cannot write to file '" + this.getAbsolutePath() + "' because " +
                 "it is not a file.");
             }
         } else {
-            throw new new Error("Cannot write to file '" + this.getAbsolutePath() + "' because it " +
+            throw new new Exception("PathDoesNotExist", {}, "Cannot write to file '" + this.getAbsolutePath() + "' because it " +
                 "does not exist.");
         }
     },
@@ -2523,7 +2533,7 @@ var Path = Class.extend(Obj, {
             })
         ).$else (
             $task(function(flow) {
-                flow.error(new Error("Cannot copy path '" + _this.getAbsolutePath() + "' because it is an " +
+                flow.error(new Exception("PathIsUnknownType", {}, "Cannot copy path '" + _this.getAbsolutePath() + "' because it is an " +
                     "unknown type."));
             })
         ).execute(callback);
@@ -2544,7 +2554,7 @@ var Path = Class.extend(Obj, {
         } else if (this._isSymlinkSync()) {
             this._copySymlinkSync(copyPath, syncMode);
         }else {
-            throw new Error("Cannot copy path '" + this.getAbsolutePath() + "' because it is an unknown type.");
+            throw new Exception("PathIsUnknownType", {}, "Cannot copy path '" + this.getAbsolutePath() + "' because it is an unknown type.");
         }
     },
 
@@ -2615,7 +2625,7 @@ var Path = Class.extend(Obj, {
             })
         ).$else (
             $task(function(flow) {
-                flow.error(new Error("Cannot copy path '" + _this.getAbsolutePath() + "' because it is an " +
+                flow.error(new Exception("PathIsUnknownType", {}, "Cannot copy path '" + _this.getAbsolutePath() + "' because it is an " +
                     "unknown type."));
             })
         ).execute(callback);
@@ -2626,7 +2636,7 @@ var Path = Class.extend(Obj, {
      * @param {Path} copyPath
      * @param {boolean} recursive
      * @param {Path.SyncMode} syncMode
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _copyDirectory: function(copyPath, recursive, syncMode, callback) {
         var _this = this;
@@ -2708,7 +2718,7 @@ var Path = Class.extend(Obj, {
      * @param {Path} copyPath
      * @param {boolean} recursive
      * @param {Path.SyncMode} syncMode
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _copyDirectoryMergeReplace: function(copyPath, recursive, syncMode, callback) {
         var _this = this;
@@ -2809,7 +2819,7 @@ var Path = Class.extend(Obj, {
      * @param {Path} copyPath
      * @param {boolean} recursive
      * @param {Path.SyncMode} syncMode
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _copyDirectoryMergeStop: function(copyPath, recursive, syncMode, callback) {
         var _this = this;
@@ -2846,7 +2856,7 @@ var Path = Class.extend(Obj, {
      * @param {Path} copyPath
      * @param {boolean} recursive
      * @param {Path.SyncMode} syncMode
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _copyDirectoryReplace: function(copyPath, recursive, syncMode, callback) {
         var _this = this;
@@ -2961,7 +2971,7 @@ var Path = Class.extend(Obj, {
      * @param {Path} intoPath
      * @param {boolean} recursive
      * @param {Path.SyncMode} syncMode
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _copyDirectoryContents: function(intoPath, recursive, syncMode, callback) {
         var _this = this;
@@ -3061,7 +3071,7 @@ var Path = Class.extend(Obj, {
      * @private
      * @param {Path} copyPath
      * @param {Path.SyncMode} syncMode
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _copyFile: function(copyPath, syncMode, callback) {
         var _this = this;
@@ -3133,7 +3143,7 @@ var Path = Class.extend(Obj, {
     /**
      * @private
      * @param {Path} copyPath
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _copyFileMergeReplace: function(copyPath, callback) {
         var _this = this;
@@ -3230,7 +3240,7 @@ var Path = Class.extend(Obj, {
     /**
      * @private
      * @param {Path} copyPath
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _copyFileReplace: function(copyPath, callback) {
         var _this = this;
@@ -3341,7 +3351,7 @@ var Path = Class.extend(Obj, {
     /**
      * @private
      * @param {Path} copyPath
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _copyFileContents: function(copyPath, callback) {
         var _this = this;
@@ -3399,7 +3409,7 @@ var Path = Class.extend(Obj, {
      * @private
      * @param {Path} copyPath
      * @param {Path.SyncMode} syncMode
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _copySymlink: function(copyPath, syncMode, callback) {
         var _this = this;
@@ -3469,7 +3479,7 @@ var Path = Class.extend(Obj, {
     /**
      * @private
      * @param {Path} copyPath
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _copySymlinkMergeReplace: function(copyPath, callback) {
         var _this = this;
@@ -3580,7 +3590,7 @@ var Path = Class.extend(Obj, {
     /**
      * @private
      * @param {Path} copyPath
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _copySymlinkReplace: function(copyPath, callback) {
         var _this = this;
@@ -3692,7 +3702,7 @@ var Path = Class.extend(Obj, {
      * @private
      * @param {boolean} createParentDirectories
      * @param {string} mode
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _createDirectory: function(createParentDirectories, mode, callback) {
         var _this = this;
@@ -3713,7 +3723,7 @@ var Path = Class.extend(Obj, {
                         if (!error) {
                             flow.complete();
                         } else {
-                            flow.error(new Error(error));
+                            flow.error(new Exception("FsError", {}, "An error occurred in the fs module", [error]));
                         }
                     }));
                 });
@@ -3736,8 +3746,8 @@ var Path = Class.extend(Obj, {
     /**
      * If the file already exists, it is NOT MODIFIED
      * @private
-     * @param {?(boolean|function(Error))=} createParentDirectories (defaults to true)
-     * @param {?function(Error)} callback
+     * @param {boolean} createParentDirectories (defaults to true)
+     * @param {function(Throwable=)} callback
      */
     _createFile: function(createParentDirectories, callback) {
         var _this = this;
@@ -3758,7 +3768,7 @@ var Path = Class.extend(Obj, {
                         if (!error) {
                             flow.complete();
                         } else {
-                            flow.error(new Error(error.message));
+                            flow.error(new Exception("FsError", {}, "An error occurred in the fs module", [error]));
                         }
                     }));
                 });
@@ -3780,7 +3790,7 @@ var Path = Class.extend(Obj, {
     /**
      * @param {boolean} recursive
      * @param {boolean} resolveSymlink
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _delete: function(recursive, resolveSymlink, callback) {
         var _this = this;
@@ -3818,7 +3828,7 @@ var Path = Class.extend(Obj, {
                         if (isSymlink) {
                             flow.assert(isSymlink);
                         } else {
-                            flow.error(new Error("Cannot delete path '" + _this.getAbsolutePath() + "' because it is an " +
+                            flow.error(new Exception("PathIsUnknownType", {}, "Cannot delete path '" + _this.getAbsolutePath() + "' because it is an " +
                                 "unknown type."));
                         }
                     } else {
@@ -3847,14 +3857,14 @@ var Path = Class.extend(Obj, {
         } else if (this._isSymlinkSync()) {
             this._deleteSymlinkSync();
         } else {
-            throw new Error("Cannot delete path '" + this.getAbsolutePath() + "' because it is an unknown type.");
+            throw new Exception("PathIsUnknownType", {}, "Cannot delete path '" + this.getAbsolutePath() + "' because it is an unknown type.");
         }
     },
 
     /**
      * @private
      * @param {boolean} recursive
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _deleteDirectory: function(recursive, callback) {
         var _this = this;
@@ -3887,7 +3897,7 @@ var Path = Class.extend(Obj, {
                             flow.complete(error);
                         });
                     } else {
-                        flow.error(new Error("Cannot delete a non-empty directory. Must delete recursively to " +
+                        flow.error(new Exception("DirectoryNotEmpty", {}, "Cannot delete a non-empty directory. Must delete recursively to " +
                             "delete a non-empty directory."));
                     }
                 } else {
@@ -3914,7 +3924,7 @@ var Path = Class.extend(Obj, {
                     childPath._deleteSync(recursive);
                 });
             } else {
-                throw new Error("Cannot delete a non-empty directory. Must delete recursively to delete a " +
+                throw new Exception("DirectoryNotEmpty", {}, "Cannot delete a non-empty directory. Must delete recursively to delete a " +
                     "non-empty directory.");
             }
         }
@@ -3923,7 +3933,7 @@ var Path = Class.extend(Obj, {
 
     /**
      * @private
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _deleteFile: function(callback) {
         this._unlinkFileOrUnlinkSymlinkedFile(callback);
@@ -3938,20 +3948,23 @@ var Path = Class.extend(Obj, {
 
     /**
      * @private
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _deleteSymlink: function(callback) {
         Path.fileHandleSemaphore.acquire(function() {
             fs.unlink(_this.getAbsolutePath(), $traceWithError(function(error) {
                 Path.fileHandleSemaphore.release();
                 if (error) {
-                    error = new Error(error.message);
+                    error = new Exception("FsError", {}, "An error occurred in the fs module.", [error]);
                 }
                 callback(error);
             }));
         });
     },
 
+    /**
+     * @private
+     */
     _deleteSymlinkSync: function() {
         fs.unlinkSync(this.getAbsolutePath());
     },
@@ -4019,7 +4032,7 @@ var Path = Class.extend(Obj, {
      * @private
      * @param {Path} intoPath
      * @param {boolean} resolveSymlink
-     * @param {function(Error, Path)} callback 
+     * @param {function(Throwable, Path=)} callback
      */
     _generateTargetPath: function(intoPath, resolveSymlink, callback) {
         var _this = this;
@@ -4055,7 +4068,7 @@ var Path = Class.extend(Obj, {
     
     /**
      * @param {boolean} resolveSymlink
-     * @param {function(Error, boolean)} callback
+     * @param {function(Throwable, boolean=)} callback
      */
     _isDirectory: function(resolveSymlink, callback) {
         var _this = this;
@@ -4064,18 +4077,18 @@ var Path = Class.extend(Obj, {
                 Path.fileHandleSemaphore.release();
                 if (!error) {
                     if (stats.isSymbolicLink() && resolveSymlink) {
-                        _this._readSymlink(function(error, symlinkedPath) {
-                            if (!error) {
+                        _this._readSymlink(function(throwable, symlinkedPath) {
+                            if (!throwable) {
                                 symlinkedPath._isDirectory(false, callback);
                             } else {
-                                callback(error);
+                                callback(throwable);
                             }
                         });
                     } else {
                         callback(undefined, stats.isDirectory());
                     }
                 } else {
-                    callback(error);
+                    callback(new Exception("FsError", {}, "An error occurred in the fs module", [error]));
                 }
             }));
         });
@@ -4098,7 +4111,7 @@ var Path = Class.extend(Obj, {
 
     /**
      * @private
-     * @param {?function(Error, boolean)} callback
+     * @param {function(Throwable, boolean=)} callback
      */
     _isDirectoryEmpty: function(callback) {
         this._readDirectory(function(error, pathArray) {
@@ -4130,7 +4143,7 @@ var Path = Class.extend(Obj, {
             fs.lstat(_this.getAbsolutePath(), $traceWithError(function(error, stats) {
                 Path.fileHandleSemaphore.release();
                 if (error) {
-                    callback(new Error(error.message));
+                    callback(new Exception("FsError", {}, "An error occurred in the fs module", [error]));
                 } else {
                     if (stats.isSymbolicLink() && resolveSymlink) {
                         _this._readSymlink(function(error, symlinkedPath) {
@@ -4164,7 +4177,7 @@ var Path = Class.extend(Obj, {
 
     /**
      * @private
-     * @param {function(Error, boolean)} callback
+     * @param {function(Throwable, boolean=)} callback
      */
     _isSymlink: function(callback) {
         var _this = this;
@@ -4172,7 +4185,7 @@ var Path = Class.extend(Obj, {
             fs.lstat(_this.getAbsolutePath(), $traceWithError(function(error, stats) {
                 Path.fileHandleSemaphore.release();
                 if (error) {
-                    callback(new Error(error.message), false);
+                    callback(new Exception("FsError", "An error occurred in the fs module.", [error]), false);
                 } else {
                     callback(null, stats.isSymbolicLink());
                 }
@@ -4193,7 +4206,7 @@ var Path = Class.extend(Obj, {
      * @param {Path} movePath
      * @param {Path.SyncMode} syncMode (defaults to Path.SyncMode.STOP)
      * @param {boolean} resolveSymlink
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _move: function(movePath, syncMode, resolveSymlink, callback) {
         var _this = this;
@@ -4241,7 +4254,7 @@ var Path = Class.extend(Obj, {
             })
         ).$else (
             $task(function(flow) {
-                flow.error(new Error("Cannot move path '" + _this.getAbsolutePath() + "' because it is an " +
+                flow.error(new Exception("PathIsUnknownType", {}, "Cannot move path '" + _this.getAbsolutePath() + "' because it is an " +
                     "unknown type."));
             })
         ).execute(callback);
@@ -4261,7 +4274,7 @@ var Path = Class.extend(Obj, {
         } else if (this._isSymlinkSync()) {
             this._moveSymlinkSync(movePath, syncMode);
         } else {
-            throw new Error("Cannot move path '" + this.getAbsolutePath() + "' because it is an unknown type.");
+            throw new Exception("PathIsUnknownType", {}, "Cannot move path '" + this.getAbsolutePath() + "' because it is an unknown type.");
         }
     },
 
@@ -4269,7 +4282,7 @@ var Path = Class.extend(Obj, {
      * @private
      * @param {Path} movePath
      * @param {Path.SyncMode} syncMode
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _moveDirectory: function(movePath, syncMode, callback) {
         var _this = this;
@@ -4342,7 +4355,7 @@ var Path = Class.extend(Obj, {
      * @private
      * @param {Path} movePath
      * @param {Path.SyncMode} syncMode
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _moveDirectoryMergeReplace: function(movePath, syncMode, callback) {
         var _this = this;
@@ -4429,7 +4442,7 @@ var Path = Class.extend(Obj, {
      * @private
      * @param {Path} movePath
      * @param {Path.SyncMode} syncMode
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _moveDirectoryMergeStop: function(movePath, syncMode, callback) {
         var _this = this;
@@ -4464,7 +4477,7 @@ var Path = Class.extend(Obj, {
      * @private
      * @param {Path} movePath
      * @param {Path.SyncMode} syncMode
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _moveDirectoryReplace: function(movePath, syncMode, callback) {
         var _this = this;
@@ -4559,7 +4572,7 @@ var Path = Class.extend(Obj, {
      * @private
      * @param {Path} intoPath
      * @param {Path.SyncMode} syncMode
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _moveDirectoryContents: function(intoPath, syncMode, callback) {
         var _this = this;
@@ -4605,7 +4618,7 @@ var Path = Class.extend(Obj, {
      * @private
      * @param {Path} movePath
      * @param {Path.SyncMode} syncMode
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _moveFile: function(movePath, syncMode, callback) {
         var _this = this;
@@ -4673,7 +4686,7 @@ var Path = Class.extend(Obj, {
     /**
      * @private
      * @param {Path} movePath
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _moveFileMergeReplace: function(movePath, callback) {
         var _this = this;
@@ -4766,7 +4779,7 @@ var Path = Class.extend(Obj, {
     /**
      * @private
      * @param {Path} movePath
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _moveFileReplace: function(movePath, callback) {
         var _this = this;
@@ -4860,7 +4873,7 @@ var Path = Class.extend(Obj, {
      * @private
      * @param {Path} movePath
      * @param {Path.SyncMode} syncMode
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _moveSymlink: function(movePath, syncMode, callback) {
         var _this = this;
@@ -4928,7 +4941,7 @@ var Path = Class.extend(Obj, {
     /**
      * @private
      * @param {Path} movePath
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _moveSymlinkMergeReplace: function(movePath, callback) {
         var _this = this;
@@ -5021,7 +5034,7 @@ var Path = Class.extend(Obj, {
     /**
      * @private
      * @param {Path} movePath
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _moveSymlinkReplace: function(movePath, callback) {
         var _this = this;
@@ -5113,7 +5126,7 @@ var Path = Class.extend(Obj, {
 
     /**
      * @private
-     * @param {?function(Error, Array.<Path>)} callback
+     * @param {function(Throwable, Array.<Path>=)} callback
      */
     _readDirectory: function(callback) {
         var _this = this;
@@ -5128,7 +5141,7 @@ var Path = Class.extend(Obj, {
                     });
                     callback(null, pathArray);
                 } else {
-                    callback(new Error(error.message));
+                    callback(new Exception("FsError", {}, "An error occurred in the fs module", [error]));
                 }
             }));
         });
@@ -5151,15 +5164,19 @@ var Path = Class.extend(Obj, {
 
     /**
      * @private
-     * @param {?string} encoding
-     * @param {function(Error, string)} callback
+     * @param {string} encoding
+     * @param {function(Throwable, string=)=} callback
      */
     _readFile: function(encoding, callback) {
         var _this = this;
         Path.fileHandleSemaphore.acquire(function() {
             fs.readFile(_this.getAbsolutePath(), encoding, $traceWithError(function(error, data) {
                 Path.fileHandleSemaphore.release();
-                callback(error, data);
+                if (!error) {
+                    callback(null, data);
+                } else {
+                    callback(new Exception("FsError", {}, "An error occurred in the fs module", [error]));
+                }
             }));
         });
     },
@@ -5184,7 +5201,7 @@ var Path = Class.extend(Obj, {
                 if (!error) {
                     callback(null, new Path(symlinkedPathString));
                 } else {
-                    callback(error);
+                    callback(new Exception("FsError", {}, "An error occurred in the fs module.", [error]));
                 }
             }));
         });
@@ -5239,7 +5256,7 @@ var Path = Class.extend(Obj, {
                         if (!error) {
                             flow.complete();
                         } else {
-                            flow.error(new Error(error.message));
+                            flow.error(new Exception("FsError", {}, "An error occurred in the fs module", [error]));
                         }
                     }));
                 });
@@ -5263,14 +5280,18 @@ var Path = Class.extend(Obj, {
     /**
      * @private
      * @param {Path} namePath
-     * @param {function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _rename: function(namePath, callback) {
         var _this = this;
         Path.fileHandleSemaphore.acquire(function() {
             fs.rename(_this.getAbsolutePath(), namePath.getAbsolutePath(), $traceWithError(function(error) {
                 Path.fileHandleSemaphore.release();
-                callback(error);
+                if (!error) {
+                    callback();
+                } else {
+                    callback(new Exception("FsError", {}, "An error occurred in the fs module.", [error]));
+                }
             }));
         });
     },
@@ -5286,7 +5307,7 @@ var Path = Class.extend(Obj, {
     /**
      * @private
      * @param {Path} movePath
-     * @param {function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _renameDirectoryOrRenameSymlinkedDirectory: function(movePath, callback) {
         var _this = this;
@@ -5338,7 +5359,7 @@ var Path = Class.extend(Obj, {
     /**
      * @private
      * @param {Path} movePath
-     * @param {function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _renameFileOrRenameSymlinkedFile: function(movePath, callback) {
         var _this = this;
@@ -5390,7 +5411,7 @@ var Path = Class.extend(Obj, {
     /**
      * @private
      * @param {Path} movePath
-     * @param {function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _renameSymlink: function(movePath, callback) {
         this._rename(movePath, callback);
@@ -5406,7 +5427,7 @@ var Path = Class.extend(Obj, {
 
     /**
      * @private
-     * @param {function(Error, Path)} callback
+     * @param {function(Throwable, Path=)} callback
      */
     _resolveSymlinks: function(callback) {
         var _this = this;
@@ -5445,14 +5466,18 @@ var Path = Class.extend(Obj, {
     /**
      * @private
      * @param {Path} symlinkPath
-     * @param {function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _symlink: function(symlinkPath, callback) {
         var _this = this;
         Path.fileHandleSemaphore.acquire(function() {
             fs.symlink(_this.getAbsolutePath(), symlinkPath.getAbsolutePath(), 'junction', $traceWithError(function(error) {
                 Path.fileHandleSemaphore.release();
-                callback(error);
+                if (!error) {
+                    callback();
+                } else {
+                    callback(new Exception("FsError", {}, "An error occurred in the fs module.", [error]));
+                }
             }));
         });
     },
@@ -5469,7 +5494,7 @@ var Path = Class.extend(Obj, {
      * @private
      * @param {Path} symlinkPath
      * @param {Path.SyncMode} syncMode (defaults to Path.SyncMode.STOP)
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _symlinkTo: function(symlinkPath, syncMode, callback) {
         var _this = this;
@@ -5503,7 +5528,7 @@ var Path = Class.extend(Obj, {
             })
         ).$else (
             $task(function(flow) {
-                flow.error(new Error("Cannot symlink path '" + _this.getAbsolutePath() + "' because it is an " +
+                flow.error(new Exception("PathIsUnknownType", {}, "Cannot symlink path '" + _this.getAbsolutePath() + "' because it is an " +
                     "unknown type."));
             })
         ).execute(callback);
@@ -5520,7 +5545,7 @@ var Path = Class.extend(Obj, {
         } else if (this._isFileSync(false)) {
             this._symlinkFileToSync(symlinkPath, syncMode);
         } else {
-            throw new Error("Cannot symlink path '" + this.getAbsolutePath() + "' because it is an unknown type.");
+            throw new Exception("PathIsUnknownType", {}, "Cannot symlink path '" + this.getAbsolutePath() + "' because it is an unknown type.");
         }
     },
 
@@ -5529,7 +5554,7 @@ var Path = Class.extend(Obj, {
      * @private
      * @param {Path} symlinkPath
      * @param {Path.SyncMode} syncMode
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _symlinkDirectoryTo: function(symlinkPath, syncMode, callback) {
         var _this = this;
@@ -5587,7 +5612,7 @@ var Path = Class.extend(Obj, {
     /**
      * @private
      * @param {Path} symlinkPath
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _symlinkDirectoryReplace: function(symlinkPath, callback) {
         var _this = this;
@@ -5681,7 +5706,7 @@ var Path = Class.extend(Obj, {
      * @private
      * @param {Path} intoPath
      * @param {Path.SyncMode} syncMode
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _symlinkDirectoryContentsInto: function(intoPath, syncMode, callback) {
         var _this = this;
@@ -5727,7 +5752,7 @@ var Path = Class.extend(Obj, {
      * @private
      * @param {Path} symlinkPath
      * @param {Path.SyncMode} syncMode
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _symlinkFileTo: function(symlinkPath, syncMode, callback) {
         var _this = this;
@@ -5787,7 +5812,7 @@ var Path = Class.extend(Obj, {
     /**
      * @private
      * @param {Path} symlinkPath
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _symlinkFileReplace: function(symlinkPath, callback) {
         var _this = this;
@@ -5879,7 +5904,7 @@ var Path = Class.extend(Obj, {
 
     /**
      * @private
-     * @param {function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _unlinkFileOrUnlinkSymlinkedFile: function(callback) {
         var _this = this;
@@ -5918,7 +5943,7 @@ var Path = Class.extend(Obj, {
                         if (!error) {
                             flow.complete();
                         } else {
-                            flow.error(new Error(error.message));
+                            flow.error(new Exception("FsError", {}, "An error occurred in the fs module." [error]));
                         }
                     }));
                 });
@@ -5943,7 +5968,7 @@ var Path = Class.extend(Obj, {
      * @private
      * @param {string} data
      * @param {string} encoding
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     _writeFile: function(data, encoding, callback) {
         var _this = this;
@@ -5951,7 +5976,7 @@ var Path = Class.extend(Obj, {
             fs.writeFile(_this.getAbsolutePath(), data, encoding, $traceWithError(function(error) {
                 Path.fileHandleSemaphore.release();
                 if (error) {
-                    error = new Error(error.message);
+                    error = new Exception("FsError", {}, "An error occurred in the fs module", [error]);
                 }
                 if (callback) {
                     callback(error);
@@ -5977,7 +6002,7 @@ var Path = Class.extend(Obj, {
     /**
      * @private
      * @param {Path} intoPath
-     * @param {function(error)} callback
+     * @param {function(Throwable=)} callback
      */
     ensurePath: function(intoPath, callback) {
         $series([
@@ -6000,7 +6025,7 @@ var Path = Class.extend(Obj, {
                 intoPath._isDirectory(true, function(error, isDirectory) {
                     if (!error) {
                         if (!isDirectory) {
-                            flow.error(new Error("Path '" + intoPath.getAbsolutePath() + "' is not a directory."));
+                            flow.error(new Exception("PathIsNotADirectory", {}, "Path '" + intoPath.getAbsolutePath() + "' is not a directory."));
                         } else {
                             flow.complete();
                         }
@@ -6020,14 +6045,14 @@ var Path = Class.extend(Obj, {
         if (!intoPath._existsSync(true)) {
             intoPath._createDirectorySync(true, "0777");
         } else if (!intoPath._isDirectorySync(true)) {
-            throw new Error("Path '" + intoPath.getAbsolutePath() + "' is not a directory.");
+            throw new Exception("PathIsNotADirectory", {}, "Path '" + intoPath.getAbsolutePath() + "' is not a directory.");
         }
     },
 
     /**
      * @private
      * @param {string} mode
-     * @param {?function(Error)} callback
+     * @param {function(Throwable=)} callback
      */
     ensureParentDirectories: function(mode, callback) {
         var parentPath = this.getParentPath();
@@ -6053,7 +6078,7 @@ var Path = Class.extend(Obj, {
                 parentPath._isDirectory(false, function(error, isDirectory) {
                     if (!error) {
                         if (!isDirectory) {
-                            flow.error(new Error("Could not create parent directory '" + parentPath.getAbsolutePath() +
+                            flow.error(new Exception("PathAlreadyExists", {}, "Could not create parent directory '" + parentPath.getAbsolutePath() +
                                 "' because it already exists and is not a directory."));
                         } else {
                             flow.complete();
@@ -6084,7 +6109,7 @@ var Path = Class.extend(Obj, {
             parentPath.createDirectorySync(true, mode);
         } else {
             if (!parentPath._isDirectorySync(false)) {
-                throw new Error("Could not create parent directory '" + parentPath.getAbsolutePath() +
+                throw new Exception("PathAlreadyExists", {}, "Could not create parent directory '" + parentPath.getAbsolutePath() +
                     "' because it already exists and is not a directory.");
             }
         }
