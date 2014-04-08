@@ -727,9 +727,9 @@ BugFs.symlinkFileIntoSync = function(filePath, intoPath, syncMode) {
 /**
  * @param {(string|Path)} filePath
  * @param {string} data
- * @param {?(string|function(Error))=} encoding
- * @param {?(boolean|function(Error))=} resolveSymlink (defaults to true)
- * @param {?function(Error)} callback
+ * @param {(string|function(Throwable=))=} encoding
+ * @param {(boolean|function(Throwable=))=} resolveSymlink (defaults to true)
+ * @param {function(Throwable=)=} callback
  */
 BugFs.writeFile = function(filePath, data, encoding, resolveSymlink, callback) {
     filePath = TypeUtil.isString(filePath) ? new Path(filePath) : filePath;
@@ -739,8 +739,8 @@ BugFs.writeFile = function(filePath, data, encoding, resolveSymlink, callback) {
 /**
  * @param {(string|Path)} filePath
  * @param {string} data
- * @param {?string=} encoding
- * @param {?boolean=} resolveSymlink (defaults to true)
+ * @param {string=} encoding
+ * @param {boolean=} resolveSymlink (defaults to true)
  */
 BugFs.writeFileSync = function(filePath, data, encoding, resolveSymlink) {
     filePath = TypeUtil.isString(filePath) ? new Path(filePath) : filePath;
