@@ -159,7 +159,7 @@ var FileFinder = Class.extend(Obj, {
     /**
      * @private
      * @param {Path} path
-     * @param {function(Throwable, Set.<Path>=)}
+     * @param {function(Throwable, Set.<Path>=)} callback
      */
     scanDirectoryForMatchingFiles: function(path, callback) {
         var _this = this;
