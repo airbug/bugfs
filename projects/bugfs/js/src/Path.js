@@ -138,6 +138,18 @@ var Path = Class.extend(Obj, {
         return path.relative(this.getAbsolutePath(), intoPath.getAbsolutePath());
     },
 
+    /**
+     * @return {boolean}
+     */
+    isGivenPathAbsolute: function() {
+        if (path.sep === "/") {
+            return /^\//.test(this.givenPath);
+        } else {
+            return /^(?:[A-Za-z]:)?\\/.test(this.givenPath);
+        }
+        return true;
+    },
+
 
     //-------------------------------------------------------------------------------
     // Object Implementation
@@ -166,7 +178,7 @@ var Path = Class.extend(Obj, {
 
 
     //-------------------------------------------------------------------------------
-    // Class Methods
+    // Public Methods
     //-------------------------------------------------------------------------------
 
     //TODO BRN: add option for "preserve" See http://en.wikipedia.org/wiki/Cp_(Unix) for description. Determine if node js already does this under the hood.
