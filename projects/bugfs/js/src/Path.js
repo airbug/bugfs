@@ -256,6 +256,13 @@ var Path = Class.extend(Obj, {
         });
     },
 
+    /**
+     * @param {(string | Path)} intoPath
+     * @param {(boolean|function(Throwable, Path=))=} recursive (defaults to true)
+     * @param {(Path.SyncMode|function(Throwable, Path=))=} syncMode (defaults to Path.SyncMode.STOP)
+     * @param {(boolean|function(Throwable, Path=))=} resolveSymlink (defaults to false)
+     * @param {function(Throwable, Path=)=} callback
+     */
     copyContents: function(intoPath, recursive, syncMode, resolveSymlink, callback) {
         if (TypeUtil.isFunction(resolveSymlink)) {
             callback = resolveSymlink;
@@ -301,15 +308,15 @@ var Path = Class.extend(Obj, {
                     });
                 })
             ]).execute(function(error) {
-                    Path.transactionSemaphore.release();
-                    if (callback) {
-                        if (!error) {
-                            callback(null, intoPath);
-                        } else {
-                            callback(error);
-                        }
+                Path.transactionSemaphore.release();
+                if (callback) {
+                    if (!error) {
+                        callback(null, intoPath);
+                    } else {
+                        callback(error);
                     }
-                });
+                }
+            });
         });
     },
 
@@ -2595,7 +2602,7 @@ var Path = Class.extend(Obj, {
                     flow.complete(error);
                 });
             })
-        ).$elseIf (function(flow) {
+        ).$elseIf(function(flow) {
                 _this._isFile(resolveSymlink, function(error, isFile) {
                     if (!error) {
                         flow.assert(isFile);
@@ -2604,17 +2611,19 @@ var Path = Class.extend(Obj, {
                     }
                 });
             },
-            $task(function(flow) {
-                _this._generateTargetPath(intoPath, resolveSymlink, function(error, targetPath) {
-                    copyPath = targetPath;
-                    flow.complete(error);
-                });
-            }),
-            $task(function(flow) {
-                _this._copyFile(copyPath, syncMode, function(error) {
-                    flow.complete(error);
-                });
-            })
+            $series([
+                $task(function(flow) {
+                    _this._generateTargetPath(intoPath, resolveSymlink, function(error, targetPath) {
+                        copyPath = targetPath;
+                        flow.complete(error);
+                    });
+                }),
+                $task(function(flow) {
+                    _this._copyFile(copyPath, syncMode, function(error) {
+                        flow.complete(error);
+                    });
+                })
+            ])
         ).$elseIf (function(flow) {
                 _this._isSymlink(function(error, isSymlink) {
                     if (!error) {
@@ -2624,17 +2633,19 @@ var Path = Class.extend(Obj, {
                     }
                 });
             },
-            $task(function(flow) {
-                _this._generateTargetPath(intoPath, resolveSymlink, function(error, targetPath) {
-                    copyPath = targetPath;
-                    flow.complete(error);
-                });
-            }),
-            $task(function(flow) {
-                _this._copySymlink(copyPath, syncMode, function(error) {
-                    flow.complete(error);
-                });
-            })
+            $series([
+                $task(function(flow) {
+                    _this._generateTargetPath(intoPath, resolveSymlink, function(error, targetPath) {
+                        copyPath = targetPath;
+                        flow.complete(error);
+                    });
+                }),
+                $task(function(flow) {
+                    _this._copySymlink(copyPath, syncMode, function(error) {
+                        flow.complete(error);
+                    });
+                })
+            ])
         ).$else (
             $task(function(flow) {
                 flow.error(new Exception("PathIsUnknownType", {}, "Cannot copy path '" + _this.getAbsolutePath() + "' because it is an " +
