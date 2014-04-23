@@ -62,8 +62,8 @@ var pathInstantiationTest = {
     //-------------------------------------------------------------------------------
 
     test: function(test) {
-        test.assertEqual(this.testPath.getClass(), Path,
-            "Assert testPath's class is Path");
+        test.assertEqual(this.testPath.getClass().getConstructor(), Path,
+            "Assert testPath's class's Constructor is Path");
         test.assertEqual(this.testPath.getGivenPath(), this.testGivenPathString,
             "Assert .givenPath was set correctly");
     }
