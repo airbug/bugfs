@@ -5465,7 +5465,7 @@ var Path = Class.extend(Obj, {
                         }
                     });
                 } else {
-                    callback(null, this);
+                    callback(null, _this);
                 }
             } else {
                 callback(error);
