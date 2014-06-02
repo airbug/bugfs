@@ -9,7 +9,7 @@
 //@Require('TypeUtil')
 //@Require('bugfs.Path')
 //@Require('bugmeta.BugMeta')
-//@Require('bugunit.TestAnnotation')
+//@Require('bugunit.TestTag')
 
 
 //-------------------------------------------------------------------------------
@@ -28,7 +28,7 @@ var Obj                 = bugpack.require('Obj');
 var TypeUtil            = bugpack.require('TypeUtil');
 var Path                = bugpack.require('bugfs.Path');
 var BugMeta             = bugpack.require('bugmeta.BugMeta');
-var TestAnnotation      = bugpack.require('bugunit.TestAnnotation');
+var TestTag      = bugpack.require('bugunit.TestTag');
 
 
 //-------------------------------------------------------------------------------
@@ -36,7 +36,7 @@ var TestAnnotation      = bugpack.require('bugunit.TestAnnotation');
 //-------------------------------------------------------------------------------
 
 var bugmeta             = BugMeta.context();
-var test                = TestAnnotation.test;
+var test                = TestTag.test;
 
 
 //-------------------------------------------------------------------------------
@@ -74,6 +74,6 @@ var pathInstantiationTest = {
 // BugMeta
 //-------------------------------------------------------------------------------
 
-bugmeta.annotate(pathInstantiationTest).with(
+bugmeta.tag(pathInstantiationTest).with(
     test().name("Path - instantiation test")
 );
