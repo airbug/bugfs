@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2014 airbug inc. http://airbug.com
+ *
+ * bugfs may be freely distributed under the MIT license.
+ */
+
+
 //-------------------------------------------------------------------------------
 // Annotations
 //-------------------------------------------------------------------------------
@@ -6,11 +13,11 @@
 
 //@Require('Bug')
 //@Require('Class')
+//@Require('Flows')
 //@Require('List')
 //@Require('Obj')
 //@Require('Set')
 //@Require('TypeUtil')
-//@Require('Flows')
 //@Require('bugfs.BugFs')
 
 
@@ -26,11 +33,11 @@ require('bugpack').context("*", function(bugpack) {
 
     var Bug                 = bugpack.require('Bug');
     var Class               = bugpack.require('Class');
+    var Flows               = bugpack.require('Flows');
     var List                = bugpack.require('List');
     var Obj                 = bugpack.require('Obj');
     var Set                 = bugpack.require('Set');
     var TypeUtil            = bugpack.require('TypeUtil');
-    var Flows             = bugpack.require('Flows');
     var BugFs               = bugpack.require('bugfs.BugFs');
 
 

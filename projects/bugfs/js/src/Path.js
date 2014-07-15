@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2014 airbug inc. http://airbug.com
+ *
+ * bugfs may be freely distributed under the MIT license.
+ */
+
+
 //-------------------------------------------------------------------------------
 // Annotations
 //-------------------------------------------------------------------------------
@@ -6,11 +13,11 @@
 
 //@Require('Class')
 //@Require('Exception')
+//@Require('Flows')
 //@Require('Obj')
 //@Require('Semaphore')
-//@Require('TypeUtil')
-//@Require('Flows')
 //@Require('Tracer')
+//@Require('TypeUtil')
 
 
 //-------------------------------------------------------------------------------
@@ -23,33 +30,33 @@ require('bugpack').context("*", function(bugpack) {
     // Common Modules
     //-------------------------------------------------------------------------------
 
-    var fs                      = require('fs');
-    var path                    = require('path');
+    var fs                  = require('fs');
+    var path                = require('path');
 
 
     //-------------------------------------------------------------------------------
     // BugPack
     //-------------------------------------------------------------------------------
 
-    var Class                   = bugpack.require('Class');
-    var Exception               = bugpack.require('Exception');
-    var Obj                     = bugpack.require('Obj');
-    var Semaphore               = bugpack.require('Semaphore');
-    var TypeUtil                = bugpack.require('TypeUtil');
-    var Flows                 = bugpack.require('Flows');
-    var Tracer                = bugpack.require('Tracer');
+    var Class               = bugpack.require('Class');
+    var Exception           = bugpack.require('Exception');
+    var Flows               = bugpack.require('Flows');
+    var Obj                 = bugpack.require('Obj');
+    var Semaphore           = bugpack.require('Semaphore');
+    var Tracer              = bugpack.require('Tracer');
+    var TypeUtil            = bugpack.require('TypeUtil');
 
 
     //-------------------------------------------------------------------------------
     // Simplify References
     //-------------------------------------------------------------------------------
 
-    var $forEachParallel        = Flows.$forEachParallel;
-    var $if                     = Flows.$if;
-    var $series                 = Flows.$series;
-    var $task                   = Flows.$task;
-    var $trace                  = Tracer.$trace;
-    var $traceWithError         = Tracer.$traceWithError;
+    var $forEachParallel    = Flows.$forEachParallel;
+    var $if                 = Flows.$if;
+    var $series             = Flows.$series;
+    var $task               = Flows.$task;
+    var $trace              = Tracer.$trace;
+    var $traceWithError     = Tracer.$traceWithError;
 
 
     //-------------------------------------------------------------------------------
