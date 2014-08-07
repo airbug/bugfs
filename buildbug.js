@@ -42,6 +42,7 @@ var nodejs              = enableModule('nodejs');
 // Values
 //-------------------------------------------------------------------------------
 
+var name                = "bugfs";
 var version             = "0.1.5";
 var dependencies        = {
     bugpack: "0.1.14"
@@ -53,12 +54,17 @@ var dependencies        = {
 //-------------------------------------------------------------------------------
 
 buildProperties({
+    name: name,
+    version: version
+});
+
+buildProperties({
     node: {
         packageJson: {
-            name: "bugfs",
-            version: version,
+            name: "{{name}}",
+            version: "{{version}}",
             description: "Convenience library for interacting with file system in node js. Built using bugcore library.",
-            main: "./scripts/bugfs-node-module.js",
+            main: "./scripts/bugfs-node.js",
             dependencies: dependencies,
             author: "Brian Neisler <brian@airbug.com>",
             repository: {
@@ -77,7 +83,7 @@ buildProperties({
         },
         sourcePaths: [
             "../bugcore/libraries/bugcore/js/src",
-            "./projects/bugfs/js/src"
+            "./libraries/bugfs/js/src"
         ],
         scriptPaths: [
             "./projects/bugfs-node/js/scripts"
@@ -85,29 +91,30 @@ buildProperties({
         readmePath: "./README.md",
         unitTest: {
             packageJson: {
-                name: "bugfs-test",
-                version: version,
-                main: "./scripts/bugfs-node-module.js",
+                name: "{{name}}-test",
+                version: "{{version}}",
+                main: "./scripts/bugfs-node.js",
                 dependencies: dependencies,
+                private: true,
                 scripts: {
-                    test: "./scripts/bugunit-run.js"
+                    test: "node ./test/scripts/bugunit-run.js"
                 }
             },
             sourcePaths: [
-                "../buganno/projects/buganno/js/src",
-                "../bugfs/projects/bugfs/js/src",
-                "../bugmeta/projects/bugmeta/js/src",
-                "../bugunit/projects/bugdouble/js/src",
-                "../bugunit/projects/bugunit/js/src",
+                "../buganno/libraries/buganno/js/src",
+                "../bugdouble/libraries/bugdouble/js/src",
+                "../bugfs/libraries/bugfs/js/src",
+                "../bugmeta/libraries/bugmeta/js/src",
+                "../bugunit/libraries/bugunit/js/src",
                 "../bugyarn/libraries/bugyarn/js/src"
             ],
             scriptPaths: [
-                "../buganno/projects/buganno/js/scripts",
-                "../bugunit/projects/bugunit/js/scripts"
+                "../buganno/libraries/buganno/js/scripts",
+                "../bugunit/libraries/bugunit/js/scripts"
             ],
             testPaths: [
                 "../bugcore/libraries/bugcore/js/test",
-                "./projects/bugfs/js/test"
+                "./libraries/bugfs/js/test"
             ]
         }
     },
@@ -163,13 +170,11 @@ buildTarget('local').buildFlow(
                     packageJson: buildProject.getProperty("node.packageJson"),
                     packagePaths: {
                         "./": [buildProject.getProperty("node.readmePath")],
-                        "./lib": buildProject.getProperty("node.sourcePaths").concat(
-                            buildProject.getProperty("node.unitTest.sourcePaths")
-                        ),
-                        "./scripts": buildProject.getProperty("node.scriptPaths").concat(
-                            buildProject.getProperty("node.unitTest.scriptPaths")
-                        ),
-                        "./test": buildProject.getProperty("node.unitTest.testPaths")
+                        "./lib": buildProject.getProperty("node.sourcePaths"),
+                        "./scripts": buildProject.getProperty("node.scriptPaths"),
+                        "./test": buildProject.getProperty("node.unitTest.testPaths"),
+                        "./test/lib": buildProject.getProperty("node.unitTest.sourcePaths"),
+                        "./test/scripts": buildProject.getProperty("node.unitTest.scriptPaths")
                     }
                 }
             }),
@@ -252,13 +257,11 @@ buildTarget('prod').buildFlow(
                     properties: {
                         packageJson: buildProject.getProperty("node.unitTest.packageJson"),
                         packagePaths: {
-                            "./lib": buildProject.getProperty("node.sourcePaths").concat(
-                                buildProject.getProperty("node.unitTest.sourcePaths")
-                            ),
-                            "./scripts": buildProject.getProperty("node.scriptPaths").concat(
-                                buildProject.getProperty("node.unitTest.scriptPaths")
-                            ),
-                            "./test": buildProject.getProperty("node.unitTest.testPaths")
+                            "./lib": buildProject.getProperty("node.sourcePaths"),
+                            "./scripts": buildProject.getProperty("node.scriptPaths"),
+                            "./test": buildProject.getProperty("node.unitTest.testPaths"),
+                            "./test/lib": buildProject.getProperty("node.unitTest.sourcePaths"),
+                            "./test/scripts": buildProject.getProperty("node.unitTest.scriptPaths")
                         }
                     }
                 }),
