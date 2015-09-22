@@ -15,6 +15,7 @@
 //@Require('Exception')
 //@Require('Flows')
 //@Require('Obj')
+//@Require('Promises')
 //@Require('Semaphore')
 //@Require('Tracer')
 //@Require('TypeUtil')
@@ -42,6 +43,7 @@ require('bugpack').context("*", function(bugpack) {
     var Exception           = bugpack.require('Exception');
     var Flows               = bugpack.require('Flows');
     var Obj                 = bugpack.require('Obj');
+    var Promises            = bugpack.require('Promises');
     var Semaphore           = bugpack.require('Semaphore');
     var Tracer              = bugpack.require('Tracer');
     var TypeUtil            = bugpack.require('TypeUtil');
@@ -908,6 +910,7 @@ require('bugpack').context("*", function(bugpack) {
          * 2) If the path already exists and it is not a file, the function will throw an error.
          * @param {(boolean|function(Throwable, Path=))=} createParentDirectories (defaults to true)
          * @param {function(Throwable, Path=)=} callback
+         * @returns {Promise}
          */
         createFile: function(createParentDirectories, callback) {
             if (TypeUtil.isFunction(createParentDirectories)) {
@@ -915,10 +918,12 @@ require('bugpack').context("*", function(bugpack) {
             }
             createParentDirectories = TypeUtil.isBoolean(createParentDirectories) ? createParentDirectories : true;
 
-            var _this = this;
+            var _this       = this;
+            var deferred    = Promises.deferred();
+            deferred.callback(callback);
 
             Path.transactionSemaphore.acquire(function() {
-                $if (function(flow) {
+                $if(function(flow) {
                         _this._exists(false, function(throwable, exists) {
                             if (!throwable) {
                                 flow.assert(!exists);
@@ -927,38 +932,32 @@ require('bugpack').context("*", function(bugpack) {
                             }
                         });
                     },
-                    $task(function(flow) {
-                        _this._createFile(createParentDirectories, function(error) {
-                            flow.complete(error);
-                        });
+                    $task(function(callback) {
+                        _this._createFile(createParentDirectories, callback);
                     })
                 ).$else(
                     // NOTE BRN: We check this to make sure that the given path did not exist already as a file.
-                    $task(function(flow) {
+                    function(flow) {
                         _this._isFile(false, function(error, isFile) {
                             if (!error) {
                                 if (!isFile) {
-                                    flow.error(new Exception("PathAlreadyExists", {}, "Could not create file '" + _this.getAbsolutePath() +
+                                    return flow.error(new Exception("PathAlreadyExists", {}, "Could not create file '" + _this.getAbsolutePath() +
                                         "' because it already exists and is not a file."));
-                                } else {
-                                    flow.complete();
                                 }
-                            } else {
-                                flow.error(error);
                             }
+                            flow.complete(error, _this);
                         });
-                    })
+                    }
                 ).execute(function(error) {
                     Path.transactionSemaphore.release();
-                    if (callback) {
-                        if (!error) {
-                            callback(null, this);
-                        } else {
-                            callback(error);
-                        }
+                    if (!error) {
+                        deferred.resolve(_this);
+                    } else {
+                        deferred.reject(error);
                     }
                 });
             });
+            return deferred.promise();
         },
 
         /**
